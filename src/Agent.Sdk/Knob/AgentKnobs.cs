@@ -410,5 +410,26 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AGENT_USE_NODE"),
             new EnvironmentKnobSource("AGENT_USE_NODE"),
             new BuiltInDefaultKnobSource(string.Empty));
+
+        public static readonly Knob PocStringKnob = new Knob(
+            name: nameof(PocStringKnob),
+            description: "Knobs POC string",
+            defaultValue: "defaultString",
+            new RuntimeKnobSource("POC_STRING_KNOB")
+        );
+
+        public static readonly Knob PocIntKnob = new Knob(
+            name: nameof(PocIntKnob),
+            description: "Knobs POC int",
+            defaultValue: "1",
+            new RuntimeKnobSource("POC_INT_KNOB")
+        );
+
+        public static readonly Knob PocBoolKnob = new Knob(
+            name: nameof(PocBoolKnob),
+            description: "Knobs POC bool",
+            defaultValue: "true",
+            new RuntimeKnobSource("POC_BOOL_KNOB")
+        );
     }
 }

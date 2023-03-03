@@ -1,19 +1,43 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using BuildXL.Cache.ContentStore.UtilitiesCore.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Agent.Sdk.Knob
 {
 
     public class CompositeKnobSource : ICompositeKnobSource
     {
+        private readonly string _defaultValue = null;
         private IKnobSource[] _sources;
+
+        public string DefaultValue
+        {
+            get => _defaultValue;
+            set { }
+        }
 
         public CompositeKnobSource(params IKnobSource[] sources)
         {
             _sources = sources;
+        }
+
+        public CompositeKnobSource(string defaultValue, params IKnobSource[] sources)
+        {
+            _sources = sources;
+            if (!_sources.Any(s => s is BuiltInDefaultKnobSource))
+            {
+                _sources.Append(new BuiltInDefaultKnobSource(defaultValue));
+            }
+            foreach (var s in _sources)
+            {
+                s.DefaultValue = defaultValue;
+            }
+
+            _defaultValue = defaultValue;
         }
 
         public KnobValue GetValue(IKnobValueContext context)
