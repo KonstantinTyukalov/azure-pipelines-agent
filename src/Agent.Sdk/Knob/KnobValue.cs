@@ -1,19 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using System;
+using System.Threading;
 using Microsoft.VisualStudio.Services.Agent.Util;
 
 namespace Agent.Sdk.Knob
 {
     public class KnobValue
     {
-        public IKnobSource Source { get; private set; }
-        private string _value;
+        public KnobSourceType Source { get; private set; }
+        private readonly string _value;
+        private readonly string _defaultValue = null;
 
-        public KnobValue(string value, IKnobSource source)
+        public string DefaultValue => _defaultValue;
+
+        public KnobValue(string value, KnobSourceType source)
         {
             _value = value;
             Source = source;
+        }
+
+        public KnobValue(string value, string defaultValue, KnobSourceType source) : this(value, source)
+        {
+            _defaultValue = defaultValue;
         }
 
         public string AsString()
@@ -28,12 +37,36 @@ namespace Agent.Sdk.Knob
 
         public bool AsBooleanStrict()
         {
-            return StringUtil.ConvertToBooleanStrict(_value);
+            try
+            {
+                return StringUtil.ConvertToBooleanStrict(_value);
+            }
+            catch (Exception)
+            {
+                if (_defaultValue != null)
+                {
+                    return StringUtil.ConvertToBoolean(_defaultValue);
+                }
+
+                throw;
+            }
         }
 
         public int AsInt()
         {
-            return Int32.Parse(_value);
+            try
+            {
+                return Int32.Parse(_value);
+            }
+            catch (Exception)
+            {
+                if (_defaultValue != null)
+                {
+                    return int.Parse(_defaultValue);
+                }
+
+                throw;
+            }
         }
     }
 }
