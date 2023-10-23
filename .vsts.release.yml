@@ -94,7 +94,7 @@ extends:
       dependsOn: Verify_release
       variables:
         isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
-      conditions:
+      condition: |
         and(
           eq(variables.isRelease, 'true'),
           eq(variables['Build.SourceBranch'], 'refs/heads/master')
@@ -135,7 +135,7 @@ extends:
         dependsOn: Verify_release
         variables:
           isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
-        conditions: eq(variables.isRelease, 'Yes')
+        condition: eq(variables.isRelease, 'Yes')
         jobs:
         ################################################################################
         - job: publish_agent_packages
@@ -241,7 +241,7 @@ extends:
 
       - stage: CreatePRs
         dependsOn: Release
-        conditions: not(parameters.onlyGitHubRelease)
+        condition: not(parameters.onlyGitHubRelease)
         jobs:
         ################################################################################
         - job: create_ado_prs
