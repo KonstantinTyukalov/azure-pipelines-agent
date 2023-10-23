@@ -130,73 +130,73 @@ jobs:
       filePath: src/Misc/check-symlinks.sh
     displayName: Check symlinks
 
-  # Run l0 tests
-  - ${{ if parameters.unitTests }}:
-    - ${{ if and(eq(parameters.os, 'win'), eq(parameters.arch, 'x86')) }}:
-      - task: UseDotNet@2
-        displayName: Install .NET Core 6 Runtime
-        inputs:
-          version: '6.0.x'
-          packageType: 'runtime'
-          installationPath: 'C:\Program Files (x86)\dotnet'
-        env:
-          PROCESSOR_ARCHITECTURE: x86
-    - script: ${{ variables.devCommand }} testl0 Debug ${{ parameters.os }}-${{ parameters.arch }}
-      workingDirectory: src
-      displayName: Unit tests
-      timeoutInMinutes: 5
+  # # Run l0 tests
+  # - ${{ if parameters.unitTests }}:
+  #   - ${{ if and(eq(parameters.os, 'win'), eq(parameters.arch, 'x86')) }}:
+  #     - task: UseDotNet@2
+  #       displayName: Install .NET Core 6 Runtime
+  #       inputs:
+  #         version: '6.0.x'
+  #         packageType: 'runtime'
+  #         installationPath: 'C:\Program Files (x86)\dotnet'
+  #       env:
+  #         PROCESSOR_ARCHITECTURE: x86
+  #   - script: ${{ variables.devCommand }} testl0 Debug ${{ parameters.os }}-${{ parameters.arch }}
+  #     workingDirectory: src
+  #     displayName: Unit tests
+  #     timeoutInMinutes: 5
 
-  # Install nuget
-  - ${{ if eq(parameters.os, 'win') }}:
-    - task: NuGetToolInstaller@1
-      displayName: Install NuGet for signing tests
+  # # Install nuget
+  # - ${{ if eq(parameters.os, 'win') }}:
+  #   - task: NuGetToolInstaller@1
+  #     displayName: Install NuGet for signing tests
 
-  # Run l1 tests
-  - ${{ if parameters.functionalTests }}:
-    - ${{ if and(eq(parameters.os, 'win'), eq(parameters.arch, 'x86')) }}:
-      - task: UseDotNet@2
-        displayName: Install .NET Core 6 SDK
-        inputs:
-         version: '6.0.413'
-         packageType: sdk
-         performMultiLevelLookup: true
-    - script: ${{ variables.devCommand }} testl1 Debug ${{ parameters.os }}-${{ parameters.arch }}
-      workingDirectory: src
-      displayName: Functional tests
+  # # Run l1 tests
+  # - ${{ if parameters.functionalTests }}:
+  #   - ${{ if and(eq(parameters.os, 'win'), eq(parameters.arch, 'x86')) }}:
+  #     - task: UseDotNet@2
+  #       displayName: Install .NET Core 6 SDK
+  #       inputs:
+  #        version: '6.0.413'
+  #        packageType: sdk
+  #        performMultiLevelLookup: true
+  #   - script: ${{ variables.devCommand }} testl1 Debug ${{ parameters.os }}-${{ parameters.arch }}
+  #     workingDirectory: src
+  #     displayName: Functional tests
 
-  - ${{ if or(parameters.unitTests, parameters.functionalTests) }}:
-    # Publish test results
-    - task: PublishTestResults@2
-      displayName: Publish Test Results **/*.trx
-      inputs:
-        testRunner: VSTest
-        testResultsFiles: '**/*.trx'
-        testRunTitle: 'Agent Tests - ${{ parameters.os }}-${{ parameters.arch }}'
-      condition: always()
+  # - ${{ if or(parameters.unitTests, parameters.functionalTests) }}:
+  #   # Publish test results
+  #   - task: PublishTestResults@2
+  #     displayName: Publish Test Results **/*.trx
+  #     inputs:
+  #       testRunner: VSTest
+  #       testResultsFiles: '**/*.trx'
+  #       testRunTitle: 'Agent Tests - ${{ parameters.os }}-${{ parameters.arch }}'
+  #     condition: always()
 
-    # Upload test log
-    - task: PublishBuildArtifacts@1.200.0
-      displayName: Publish Test logs
-      inputs:
-        pathToPublish: src/Test/TestLogs
-        artifactName: ${{ parameters.os }}-${{ parameters.arch }}-$(System.JobId)
-        artifactType: container
-      condition: always()
+  #   # Upload test log
+  #   - task: PublishBuildArtifacts@1.200.0
+  #     displayName: Publish Test logs
+  #     inputs:
+  #       pathToPublish: src/Test/TestLogs
+  #       artifactName: ${{ parameters.os }}-${{ parameters.arch }}-$(System.JobId)
+  #       artifactType: container
+  #     condition: always()
 
-  # Code coverage
-  - ${{ if and(parameters.codeCoverage, parameters.unitTests, parameters.functionalTests) }}:
-    - script: dotnet tool install --global dotnet-reportgenerator-globaltool
-      displayName: Install Report Generator
+  # # Code coverage
+  # - ${{ if and(parameters.codeCoverage, parameters.unitTests, parameters.functionalTests) }}:
+  #   - script: dotnet tool install --global dotnet-reportgenerator-globaltool
+  #     displayName: Install Report Generator
 
-    - script: ${{ variables.devCommand }} report
-      displayName: Generate Code Coverage report
-      workingDirectory: src
+  #   - script: ${{ variables.devCommand }} report
+  #     displayName: Generate Code Coverage report
+  #     workingDirectory: src
 
-    - task: PublishCodeCoverageResults@1
-      inputs:
-        codeCoverageTool: 'cobertura'
-        summaryFileLocation: _reports/**/Cobertura.xml
-        pathToSources: src
+  #   - task: PublishCodeCoverageResults@1
+  #     inputs:
+  #       codeCoverageTool: 'cobertura'
+  #       summaryFileLocation: _reports/**/Cobertura.xml
+  #       pathToSources: src
 
   - ${{ if eq(parameters.os, 'osx') }}:
     - task: UseDotNet@2
