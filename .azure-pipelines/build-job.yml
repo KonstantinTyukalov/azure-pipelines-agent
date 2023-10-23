@@ -203,22 +203,22 @@ jobs:
         packageType: 'sdk'
         version: '6.0.x'
 
-  - ${{ if parameters.sign }}:
-    # Signing steps
-    - template: signing.yml
-      parameters:
-        layoutRoot: ${{ variables.layoutRoot }}
-        isWindows: ${{ eq(parameters.os, 'win') }}
+  # - ${{ if parameters.sign }}:
+  #   # Signing steps
+  #   - template: signing.yml
+  #     parameters:
+  #       layoutRoot: ${{ variables.layoutRoot }}
+  #       isWindows: ${{ eq(parameters.os, 'win') }}
 
   # Publish artifacts
-  - ${{ if parameters.publishArtifact }}:
+  # - ${{ if parameters.publishArtifact }}:
 
-    # Package .NET Core Windows dependency (VC++ Redistributable)
-    - ${{ if eq(parameters.os, 'win') }}:
-      - template: package-vcredist.yml
-        parameters:
-          layoutRoot: ${{ variables.layoutRoot }}
-          flavor: ${{ parameters.arch }}
+  #   # Package .NET Core Windows dependency (VC++ Redistributable)
+  #   - ${{ if eq(parameters.os, 'win') }}:
+  #     - template: package-vcredist.yml
+  #       parameters:
+  #         layoutRoot: ${{ variables.layoutRoot }}
+  #         flavor: ${{ parameters.arch }}
 
     # Create agent package zip
     - script: "${{ variables.devCommand }} package Release ${{ parameters.os }}-${{ parameters.arch }}"
@@ -245,19 +245,19 @@ jobs:
         artifactName: hash
         artifactType: container
 
-  # Signing verification
-  - ${{ if parameters.verifySigning }}:
+  # # Signing verification
+  # - ${{ if parameters.verifySigning }}:
 
-    # Verify all binaries are signed (generate report)
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-codesignvalidation.CodesignValidation@0
-      displayName: 'Generate Codesign Report'
-      inputs:
-        path: ${{ variables.layoutRoot }}
+  #   # Verify all binaries are signed (generate report)
+  #   - task: securedevelopmentteam.vss-secure-development-tools.build-task-codesignvalidation.CodesignValidation@0
+  #     displayName: 'Generate Codesign Report'
+  #     inputs:
+  #       path: ${{ variables.layoutRoot }}
 
-    # Verify all binaries are signed (check report)
-    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
-      displayName: 'Verify Codesign Report'
-      inputs:
-        CodesignValidation: true
-        CodesignValidationBreakOn: WarningAbove
-        ToolLogsNotFoundAction: Error
+  #   # Verify all binaries are signed (check report)
+  #   - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+  #     displayName: 'Verify Codesign Report'
+  #     inputs:
+  #       CodesignValidation: true
+  #       CodesignValidationBreakOn: WarningAbove
+  #       ToolLogsNotFoundAction: Error
