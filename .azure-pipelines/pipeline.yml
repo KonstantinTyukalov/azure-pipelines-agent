@@ -5,6 +5,9 @@ parameters:
 - name: postBuildStages
   type: stageList
   default: []
+- name: dependsOn
+  type: object
+  default: []
 - name: componentDetection
   type: boolean
   default: false
@@ -64,6 +67,8 @@ stages:
 
 - stage: build
   displayName: Build
+  ${{ if ne(length(parameters.dependsOn), 0)}}:
+    dependsOn: ${{ parameters.dependsOn }}
   jobs:
   # Test Proxy Agent
   - ${{ if parameters.testProxyAgent }}:

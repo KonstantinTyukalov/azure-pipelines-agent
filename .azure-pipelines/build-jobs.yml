@@ -60,6 +60,10 @@ parameters:
   type: boolean
   default: false
 
+- name: dependsOn
+  type: object
+  default: []
+
 jobs:
   - template: build-job.yml
     parameters:

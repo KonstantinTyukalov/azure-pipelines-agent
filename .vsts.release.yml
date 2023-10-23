@@ -34,6 +34,10 @@ parameters:
   default: true
   displayName: Test Proxy Agent
 
+- name: dependsOn
+  type: object
+  default: []
+
 variables:
   ${{ if parameters.buildStageOnly }}:
     releaseBranch: ''
@@ -49,6 +53,7 @@ extends:
     sign: true
     publishArtifacts: true
     testProxyAgent: ${{ parameters.testProxyAgent }}
+    dependsOn: Verify_release
 
     preBuildStages:
     - stage: Verify_release
@@ -105,13 +110,20 @@ extends:
           inputs:
             versionSpec: "14.15.1"
 
-        - script: |
+        - pwsh: |
             cd release
             npm install
-            node createReleaseBranch.js ${{ parameters.version }} --derivedFrom=${{ parameters.derivedFrom }}
+            if ($env:IS_SCHEDULED_RELEASE -eq 'true'){
+              node createReleaseBranch.js $env:AGENT_VERSION --derivedFrom=${{ parameters.derivedFrom }}
+            }
+            else {
+              node createReleaseBranch.js ${{ parameters.version }} --derivedFrom=${{ parameters.derivedFrom }}
+            }
           env:
             EDITOR: cat
             PAT: $(GithubToken)
+            IS_SCHEDULED_RELEASE: dependencies.Verify_release.outputs['SetReleaseVariables.isScheduledRelease']
+            AGENT_VERSION: dependencies.Verify_release.outputs['SetReleaseVariables.scheduledAgentVersion']
           displayName: Push release branch to GitHub
 
     postBuildStages:
@@ -134,7 +146,7 @@ extends:
           # Switch to release branch
           - template: switch-branch.yml
             parameters:
-              branch: ${{ variables.releaseBranch }}
+              branch: dependencies.Verify_release.outputs['SetReleaseVariable.releaseBranch']
 
           # Download all agent packages from all previous phases
           - task: DownloadBuildArtifacts@0

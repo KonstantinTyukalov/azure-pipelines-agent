@@ -4,8 +4,10 @@ parameters:
 
 steps:
 - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-  - script: |
+  - pwsh: |
       git config user.email "azure-pipelines-bot@microsoft.com"
       git config user.name "azure-pipelines-bot"
-      git checkout -f origin/${{ parameters.branch }}
+      git checkout -f origin/$env:BRANCH_NAME
     displayName: Checkout branch
+    env:
+      BRANCH_NAME: dependencies.Verify_release.outputs['SetReleaseVariables.releaseBranch']

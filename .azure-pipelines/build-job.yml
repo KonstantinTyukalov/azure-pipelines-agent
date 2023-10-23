@@ -66,12 +66,18 @@ parameters:
   - agent
   - pipelines-agent
 
+- name: dependsOn
+  type: object
+  default: []
+
 jobs:
 
 - job: ${{ parameters.jobName }}
   displayName: ${{ parameters.displayName }}
   pool: ${{ parameters.pool }}
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  ${{ if ne(parameters.dependsOn, {}) }}:
+    dependsOn: ${{ parameters.dependsOn }}
 
   ${{ if ne(parameters.container, '') }}:
     container: ${{ parameters.container }}
