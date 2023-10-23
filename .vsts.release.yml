@@ -93,8 +93,7 @@ extends:
       displayName: Create Release Branch
       dependsOn: Verify_release
       variables:
-        isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
-      condition: eq(variables.isRelease, 'True')
+      condition: eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'True')
         # and(
         #   ,
         #   # eq(variables['Build.SourceBranch'], 'refs/heads/master')
@@ -135,9 +134,7 @@ extends:
         dependsOn:
           - build
           - Verify_release
-        variables:
-          isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
-        condition: and(succeeded(), eq(variables.isRelease, 'Yes'))
+        condition: and(succeeded(), eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'True'))
         jobs:
         ################################################################################
         - job: publish_agent_packages
