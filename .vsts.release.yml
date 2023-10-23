@@ -89,10 +89,13 @@ extends:
           env:
             BSO_VALUE: ${{ parameters.buildStageOnly }}
 
+        - script: echo "TRUE ayaya"
+          condition: eq(variables.isRelease, 'True')
+
     - stage: Create_Release_Branch
       displayName: Create Release Branch
       dependsOn: Verify_release
-      condition: eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'True')
+      condition: and(succeeded(), eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'True'))
         # and(
         #   ,
         #   # eq(variables['Build.SourceBranch'], 'refs/heads/master')
