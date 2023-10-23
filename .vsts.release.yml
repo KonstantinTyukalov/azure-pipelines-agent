@@ -124,8 +124,8 @@ extends:
           env:
             EDITOR: cat
             PAT: $(GithubToken)
-            IS_SCHEDULED_RELEASE: dependencies.Verify_release.outputs['SetReleaseVariables.isScheduledRelease']
-            AGENT_VERSION: dependencies.Verify_release.outputs['SetReleaseVariables.scheduledAgentVersion']
+            IS_SCHEDULED_RELEASE: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isScheduledRelease'] ]
+            AGENT_VERSION: $[ dependencies.Verify_release.outputs['SetReleaseVariables.scheduledAgentVersion'] ]
           displayName: Push release branch to GitHub
 
     postBuildStages:
@@ -148,7 +148,7 @@ extends:
           # Switch to release branch
           - template: switch-branch.yml
             parameters:
-              branch: dependencies.Verify_release.outputs['SetReleaseVariables.releaseBranch']
+              branch: $[ dependencies.Verify_release.outputs['SetReleaseVariables.releaseBranch'] ]
 
           # Download all agent packages from all previous phases
           - task: DownloadBuildArtifacts@0

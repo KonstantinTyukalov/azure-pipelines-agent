@@ -10,4 +10,4 @@ steps:
       git checkout -f origin/$env:BRANCH_NAME
     displayName: Checkout branch
     env:
-      BRANCH_NAME: dependencies.Verify_release.outputs['SetReleaseVariables.releaseBranch']
+      BRANCH_NAME: ${{ parameters.branch }}
