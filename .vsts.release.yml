@@ -92,7 +92,6 @@ extends:
     - stage: Create_Release_Branch
       displayName: Create Release Branch
       dependsOn: Verify_release
-      variables:
       condition: eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'True')
         # and(
         #   ,
