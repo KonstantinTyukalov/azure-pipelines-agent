@@ -124,7 +124,7 @@ jobs:
         ADO_ENABLE_LOGISSUE: true
 
   # Check if broken symlinks exist in the agent build
-  - task: Bash@3.201.1
+  - task: Bash@3
     inputs:
       filePath: src/Misc/check-symlinks.sh
     displayName: Check symlinks
