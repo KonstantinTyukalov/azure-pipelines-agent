@@ -94,11 +94,11 @@ extends:
       dependsOn: Verify_release
       variables:
         isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
-      condition: |
-        and(
-          eq(variables.isRelease, 'True'),
-          # eq(variables['Build.SourceBranch'], 'refs/heads/master')
-        )
+      condition: eq(variables.isRelease, 'True')
+        # and(
+        #   ,
+        #   # eq(variables['Build.SourceBranch'], 'refs/heads/master')
+        # )
       jobs:
       ################################################################################
       - job: Create_Release_Branch
