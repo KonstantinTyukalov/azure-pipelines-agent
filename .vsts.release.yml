@@ -241,7 +241,7 @@ extends:
 
       - stage: CreatePRs
         dependsOn: Release
-        condition: not(parameters.onlyGitHubRelease)
+        condition: not(${{ parameters.onlyGitHubRelease }})
         jobs:
         ################################################################################
         - job: create_ado_prs
