@@ -35,10 +35,6 @@ parameters:
   default: true
   displayName: Test Proxy Agent
 
-- name: dependsOn
-  type: object
-  default: []
-
 variables:
   ${{ if parameters.buildStageOnly }}:
     releaseBranch: ''
@@ -54,7 +50,9 @@ extends:
     sign: true
     publishArtifacts: true
     testProxyAgent: ${{ parameters.testProxyAgent }}
-    dependsOn: Verify_release
+    dependsOn:
+      - Verify_release
+      - Create_Release_Branch
 
     preBuildStages:
     - stage: Verify_release
@@ -132,10 +130,12 @@ extends:
 
     postBuildStages:
       - stage: Release
-        dependsOn: Verify_release
+        dependsOn:
+          - build
+          - Verify_release
         variables:
           isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
-        condition: eq(variables.isRelease, 'Yes')
+        condition: and(succeeded(), eq(variables.isRelease, 'Yes'))
         jobs:
         ################################################################################
         - job: publish_agent_packages
