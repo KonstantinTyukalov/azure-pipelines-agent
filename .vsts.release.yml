@@ -1,5 +1,5 @@
 schedules:
-- cron: '0 1 * * Tue'
+- cron: '55 * * * *'
   displayName: Scheduled weekly run
   branches:
     include:
