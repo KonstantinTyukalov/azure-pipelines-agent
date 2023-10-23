@@ -68,7 +68,7 @@ extends:
             $buildReason = $env:BUILD_REASON
 
             $currentSprint = (Invoke-WebRequest https://whatsprintis.it -Headers @{"Accept" = "application/json" } | ConvertFrom-Json)
-            $isReleaseWeek = $currentSprint.week -eq 3
+            $isReleaseWeek = $currentSprint.week -eq 2
 
             $isRelease = $isBuildStageOnly -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
             Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
