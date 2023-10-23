@@ -59,39 +59,40 @@ extends:
     preBuildStages:
     - stage: Verify_release
       displayName: Make sure it's actually the release run
-      vmImage: ubuntu-latest
+      pool:
+        vmImage: ubuntu-latest
       jobs:
       - job: Set_variables
         displayName: Set release-specific variables
-      steps:
-      - pwsh: |
-          $isBuildStageOnly = [System.Convert]::ToBoolean($env:BSO_VALUE)
-          $buildReason = $env:BUILD_REASON
+        steps:
+        - pwsh: |
+            $isBuildStageOnly = [System.Convert]::ToBoolean($env:BSO_VALUE)
+            $buildReason = $env:BUILD_REASON
 
-          $currentSprint = (Invoke-WebRequest https://whatsprintis.it -Headers @{"Accept" = "application/json" } | ConvertFrom-Json)
-          $isReleaseWeek = $currentSprint.week -eq 3
+            $currentSprint = (Invoke-WebRequest https://whatsprintis.it -Headers @{"Accept" = "application/json" } | ConvertFrom-Json)
+            $isReleaseWeek = $currentSprint.week -eq 3
 
-          if (
-              $isBuildStageOnly -or
-              ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
-          ) {
-              $isRelease = 'No'
-          }
-          else {
-              $isRelease = 'Yes'
-          }
+            if (
+                $isBuildStageOnly -or
+                ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
+            ) {
+                $isRelease = 'No'
+            }
+            else {
+                $isRelease = 'Yes'
+            }
 
-          Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
+            Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
 
-        name: SetReleaseVariable
-        displayName: Set isRelease variable
-        env:
-          BSO_VALUE: ${{ parameters.buildStageOnly }}
+          name: SetReleaseVariable
+          displayName: Set isRelease variable
+          env:
+            BSO_VALUE: ${{ parameters.buildStageOnly }}
 
     - stage: Create_Release_Branch
       displayName: Create Release Branch
       dependsOn: Verify_release
-      conditions: |
+      conditions:
         and(
           eq(dependencies.Verify_release.outputs['SetReleaseVariable.isRelease'], 'Yes'),
           eq(variables['Build.SourceBranch'], 'refs/heads/master')
@@ -130,7 +131,7 @@ extends:
     postBuildStages:
       - stage: Release
         dependsOn: Verify_release
-        conditions: eq(dependencies.Verify_release.outputs['SetReleaseVariable.isRelease'], 'Yes'),
+        conditions: eq(dependencies.Verify_release.outputs['SetReleaseVariable.isRelease'], 'Yes')
         jobs:
         ################################################################################
         - job: publish_agent_packages
@@ -234,39 +235,39 @@ extends:
               Invoke-RestMethod @assetsParams
             displayName: Create agent release on Github
 
-        - stage: CreatePRs
-          dependsOn: Release
-          conditions: not(parameters.onlyGitHubRelease)
-          jobs:
-          ################################################################################
-          - job: create_ado_prs
-          ################################################################################
+      - stage: CreatePRs
+        dependsOn: Release
+        conditions: not(parameters.onlyGitHubRelease)
+        jobs:
+        ################################################################################
+        - job: create_ado_prs
+        ################################################################################
+          displayName: Create PRs in AzureDevOps and ConfigChange
+          pool:
+            vmImage: ubuntu-latest
+
+          steps:
+          - checkout: self
+
+          - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+            - script: git checkout ${{ variables.releaseBranch }}
+              displayName: Checkout release branch
+
+          # Download all agent hashes created in previous phases
+          - task: DownloadBuildArtifacts@0
+            displayName: Download Agent Hashes
+            inputs:
+              artifactName: hash
+              downloadPath: $(Build.SourcesDirectory)/_hashes
+
+          - bash: |
+              set -x
+              cd release
+              npm install
+              ls
+              node createAdoPrs.js ${{ parameters.version }}
             displayName: Create PRs in AzureDevOps and ConfigChange
-            pool:
-              vmImage: ubuntu-latest
-
-            steps:
-            - checkout: self
-
-            - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-              - script: git checkout ${{ variables.releaseBranch }}
-                displayName: Checkout release branch
-
-            # Download all agent hashes created in previous phases
-            - task: DownloadBuildArtifacts@0
-              displayName: Download Agent Hashes
-              inputs:
-                artifactName: hash
-                downloadPath: $(Build.SourcesDirectory)/_hashes
-
-            - bash: |
-                set -x
-                cd release
-                npm install
-                ls
-                node createAdoPrs.js ${{ parameters.version }}
-              displayName: Create PRs in AzureDevOps and ConfigChange
-              env:
-                USERNAME: $(User)
-                PAT: $(AdoPAT)
-                USEREMAIL: $(Email)
+            env:
+              USERNAME: $(User)
+              PAT: $(AdoPAT)
+              USEREMAIL: $(Email)
