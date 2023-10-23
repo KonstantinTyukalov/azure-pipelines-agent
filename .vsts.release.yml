@@ -9,6 +9,7 @@ parameters:
 - name: version
   type: string
   displayName: Version
+  default: ''
 - name: derivedFrom
   type: string
   displayName: Derived From Version
