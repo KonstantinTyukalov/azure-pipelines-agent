@@ -84,7 +84,7 @@ extends:
 
             Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
 
-          name: SetReleaseVariable
+          name: SetReleaseVariables
           displayName: Set isRelease variable
           env:
             BSO_VALUE: ${{ parameters.buildStageOnly }}
@@ -94,7 +94,7 @@ extends:
       dependsOn: Verify_release
       conditions:
         and(
-          eq(dependencies.Verify_release.outputs['SetReleaseVariable.isRelease'], 'Yes'),
+          eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'Yes'),
           eq(variables['Build.SourceBranch'], 'refs/heads/master')
         )
       jobs:
@@ -131,7 +131,7 @@ extends:
     postBuildStages:
       - stage: Release
         dependsOn: Verify_release
-        conditions: eq(dependencies.Verify_release.outputs['SetReleaseVariable.isRelease'], 'Yes')
+        conditions: eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'Yes')
         jobs:
         ################################################################################
         - job: publish_agent_packages
@@ -148,7 +148,7 @@ extends:
           # Switch to release branch
           - template: switch-branch.yml
             parameters:
-              branch: dependencies.Verify_release.outputs['SetReleaseVariable.releaseBranch']
+              branch: dependencies.Verify_release.outputs['SetReleaseVariables.releaseBranch']
 
           # Download all agent packages from all previous phases
           - task: DownloadBuildArtifacts@0
