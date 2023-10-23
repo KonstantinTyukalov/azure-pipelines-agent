@@ -72,17 +72,17 @@ extends:
             $currentSprint = (Invoke-WebRequest https://whatsprintis.it -Headers @{"Accept" = "application/json" } | ConvertFrom-Json)
             $isReleaseWeek = $currentSprint.week -eq 3
 
-            if (
-                $isBuildStageOnly -or
-                ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
-            ) {
-                $isRelease = 'No'
-            }
-            else {
-                $isRelease = 'Yes'
-            }
-
+            $isRelease = $isBuildStageOnly -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
             Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
+
+            $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
+            Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$isScheduledRelease"
+
+            if ($isScheduledRelease) {
+                $agentVersion = "3.$($currentSprint.sprint).0"
+                Write-Host "##vso[task.setVariable variable=scheduledAgentVersion; isOutput=true]$agentVersion"
+                Write-Host "##vso[task.setVariable variable=releaseBranch; isOutput=true]releases/$agentVersion"
+            }
 
           name: SetReleaseVariables
           displayName: Set isRelease variable
@@ -92,9 +92,11 @@ extends:
     - stage: Create_Release_Branch
       displayName: Create Release Branch
       dependsOn: Verify_release
+      variables:
+        isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
       conditions:
         and(
-          eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'Yes'),
+          eq(variables.isRelease, 'true'),
           eq(variables['Build.SourceBranch'], 'refs/heads/master')
         )
       jobs:
@@ -131,7 +133,9 @@ extends:
     postBuildStages:
       - stage: Release
         dependsOn: Verify_release
-        conditions: eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'Yes')
+        variables:
+          isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
+        conditions: eq(variables.isRelease, 'Yes')
         jobs:
         ################################################################################
         - job: publish_agent_packages

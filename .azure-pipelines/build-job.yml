@@ -92,6 +92,7 @@ jobs:
     DisableCFSDetector: true
     DisableDockerDetector: true
     nugetMultiFeedWarnLevel: none
+    checkout_branch: $[ dependencies.Verify_release.outputs['SetReleaseVariable.releaseBranch'] ]
 
   steps:
 
@@ -108,7 +109,7 @@ jobs:
   # - ${{ if ne(parameters.branch, '') }}:
   - template: switch-branch.yml
     parameters:
-      branch: $[ dependencies.Verify_release.outputs['SetReleaseVariable.releaseBranch'] ]
+      branch: $(checkout_branch)
 
   # 1ES images used on the ARM pool doesn't contain unzip tool, so we need to install it before starting the build
   - ${{ if and(eq(parameters.arch, 'arm64'), ne(parameters.os, 'osx')) }}:
