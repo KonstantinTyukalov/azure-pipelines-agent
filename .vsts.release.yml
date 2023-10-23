@@ -95,7 +95,10 @@ extends:
     - stage: Create_Release_Branch
       displayName: Create Release Branch
       dependsOn: Verify_release
-      condition: and(succeeded(), eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'True'))
+      condition: and(
+                  succeeded(),
+                  eq(stageDependencies.Verify_release.outputs['Set_variables.SetReleaseVariables.isRelease'], 'True')
+                )
         # and(
         #   ,
         #   # eq(variables['Build.SourceBranch'], 'refs/heads/master')
@@ -127,8 +130,8 @@ extends:
           env:
             EDITOR: cat
             PAT: $(GithubToken)
-            IS_SCHEDULED_RELEASE: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isScheduledRelease'] ]
-            AGENT_VERSION: $[ dependencies.Verify_release.outputs['SetReleaseVariables.scheduledAgentVersion'] ]
+            IS_SCHEDULED_RELEASE: $[ stageDependencies.Verify_release.outputs['Set_variables.SetReleaseVariables.isScheduledRelease'] ]
+            AGENT_VERSION: $[ stageDependencies.Verify_release.outputs['Set_variables.SetReleaseVariables.scheduledAgentVersion'] ]
           displayName: Push release branch to GitHub
 
     postBuildStages:
