@@ -71,10 +71,12 @@ extends:
             $isReleaseWeek = $currentSprint.week -eq 2
 
             $isRelease = $isBuildStageOnly -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
-            Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
+            # Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
+            Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$true"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
-            Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$isScheduledRelease"
+            # Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$isScheduledRelease"
+            Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$True"
 
             if ($isScheduledRelease) {
                 $agentVersion = "3.$($currentSprint.sprint).0"
