@@ -69,6 +69,7 @@ stages:
   displayName: Build
   ${{ if ne(length(parameters.dependsOn), 0)}}:
     dependsOn: ${{ parameters.dependsOn }}
+    condition: in(dependencies.Create_Release_Branch.result, 'Succeeded', 'Skipped')
   jobs:
   # Test Proxy Agent
   # - ${{ if parameters.testProxyAgent }}:
@@ -107,7 +108,7 @@ stages:
           vmImage: windows-2022
         os: win
         arch: x64
-        branch: ${{ parameters.branch }}
+        # branch: ${{ parameters.branch }}
         codeCoverage: true
         componentDetection: ${{ parameters.componentDetection }}
         unitTests: ${{ parameters.test }}

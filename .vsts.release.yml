@@ -9,7 +9,7 @@ parameters:
 - name: version
   type: string
   displayName: Version
-  default: ''
+  default: '3.999999.0'
 - name: derivedFrom
   type: string
   displayName: Derived From Version
@@ -35,16 +35,16 @@ parameters:
   default: true
   displayName: Test Proxy Agent
 
-variables:
-  ${{ if parameters.buildStageOnly }}:
-    releaseBranch: ''
-  ${{ else }}:
-    releaseBranch: releases/${{ parameters.version }}
+# variables:
+#   ${{ if parameters.buildStageOnly }}:
+#     releaseBranch: ''
+#   ${{ else }}:
+#     releaseBranch: releases/${{ parameters.version }}
 
 extends:
   template: .azure-pipelines/pipeline.yml
   parameters:
-    branch:  ${{ variables.releaseBranch }}
+    # branch:  ${{ variables.releaseBranch }}
     componentDetection: false
     test: ${{ not(parameters.skipTests) }}
     sign: true
@@ -71,12 +71,12 @@ extends:
             $isReleaseWeek = $currentSprint.week -eq 2
 
             $isRelease = $isBuildStageOnly -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
-            # Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
-            Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$true"
+            $isRelease = $True
+            Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
-            # Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$isScheduledRelease"
-            Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$True"
+            $isScheduledRelease = $True
+            Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$isScheduledRelease"
 
             if ($isScheduledRelease) {
                 $agentVersion = "3.$($currentSprint.sprint).0"
@@ -96,8 +96,8 @@ extends:
         isRelease: $[ dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'] ]
       condition: |
         and(
-          eq(variables.isRelease, 'true'),
-          eq(variables['Build.SourceBranch'], 'refs/heads/master')
+          eq(variables.isRelease, 'True'),
+          # eq(variables['Build.SourceBranch'], 'refs/heads/master')
         )
       jobs:
       ################################################################################
@@ -117,7 +117,7 @@ extends:
         - pwsh: |
             cd release
             npm install
-            if ($env:IS_SCHEDULED_RELEASE -eq 'true'){
+            if ($env:IS_SCHEDULED_RELEASE -eq 'True'){
               node createReleaseBranch.js $env:AGENT_VERSION --derivedFrom=${{ parameters.derivedFrom }}
             }
             else {

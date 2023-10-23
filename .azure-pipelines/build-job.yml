@@ -90,7 +90,7 @@ jobs:
     DisableCFSDetector: true
     DisableDockerDetector: true
     nugetMultiFeedWarnLevel: none
-    checkout_branch: $[ dependencies.Verify_release.outputs['SetReleaseVariable.releaseBranch'] ]
+    checkout_branch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariable.releaseBranch'] ]
 
   steps:
 
