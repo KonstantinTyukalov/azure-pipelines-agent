@@ -92,6 +92,23 @@ extends:
         - script: echo "TRUE ayaya"
           condition: eq(variables.isRelease, 'True')
 
+    - stage: CheckStage
+      displayName: CHeck what is inside
+      dependsOn:
+      - Verify_release
+      jobs:
+      - job: check
+        variables:
+        - name: stage1dep
+          value: $[converttojson(stageDependencies)]
+        - name: deps
+          value: $[converttojson(dependencies)]
+        steps:
+        - script: echo $(stage1dep)
+          displayName: Check what is inside stage dependencies
+        - script: echo $(deps)
+          displayName: Check what is inside just dependencies
+
     - stage: Create_Release_Branch
       displayName: Create Release Branch
       dependsOn: Verify_release
