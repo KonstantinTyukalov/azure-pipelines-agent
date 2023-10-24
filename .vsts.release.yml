@@ -72,16 +72,16 @@ extends:
 
             $isRelease = $isBuildStageOnly -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
             $isRelease = $True
-            Write-Host "##vso[task.setVariable variable=isRelease; isOutput=true]$isRelease"
+            Write-Host "##vso[task.setVariable variable=isRelease;isOutput=true]$isRelease"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
             $isScheduledRelease = $True
-            Write-Host "##vso[task.setVariable variable=isScheduledRelease; isOutput=true]$isScheduledRelease"
+            Write-Host "##vso[task.setVariable variable=isScheduledRelease;isOutput=true]$isScheduledRelease"
 
             if ($isScheduledRelease) {
                 $agentVersion = "3.$($currentSprint.sprint).0"
                 Write-Host "##vso[task.setVariable variable=scheduledAgentVersion; isOutput=true]$agentVersion"
-                Write-Host "##vso[task.setVariable variable=releaseBranch; isOutput=true]releases/$agentVersion"
+                Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]releases/$agentVersion"
             }
 
           name: SetReleaseVariables
@@ -104,9 +104,9 @@ extends:
         - name: deps
           value: $[converttojson(dependencies)]
         steps:
-        - script: echo $(stage1dep)
+        - script: echo '$(stage1dep)'
           displayName: Check what is inside stage dependencies
-        - script: echo $(deps)
+        - script: echo '$(deps)'
           displayName: Check what is inside just dependencies
 
     - stage: Create_Release_Branch
