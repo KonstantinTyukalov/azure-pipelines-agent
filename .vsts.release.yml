@@ -114,7 +114,7 @@ extends:
       dependsOn: Verify_release
       condition: and(
                   succeeded(),
-                  eq(dependencies.Verify_release.outputs['SetReleaseVariables.SetReleaseVariables.isRelease'], 'True')
+                  eq(dependencies.Verify_release.outputs['Set_variables.SetReleaseVariables.isRelease'], 'True')
                 )
         # and(
         #   ,
