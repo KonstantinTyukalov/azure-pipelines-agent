@@ -160,23 +160,30 @@ extends:
           pool:
             vmImage: ubuntu-latest
             # name: RMAgentsProdAME
-          condition: and(succeeded(), eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True'))
+          condition: and(
+              succeeded(),
+              eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
+            )
           steps:
 
           # Clean
           - checkout: self
             clean: true
 
-          # Switch to release branch
-          - task: PowerShell@2
-            inputs:
-              filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
+          - script: echo $TESTVAR
             env:
-              BRANCH_NAME: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
-            condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
-            displayName: Switch to release branch
+              TESTVAR: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
 
-          - script: git status
+          # # Switch to release branch
+          # - task: PowerShell@2
+          #   inputs:
+          #     filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
+          #   env:
+          #     BRANCH_NAME: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
+          #   condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
+          #   displayName: Switch to release branch
+
+          # - script: git status
 
       #     # Download all agent packages from all previous phases
       #     - task: DownloadBuildArtifacts@0
