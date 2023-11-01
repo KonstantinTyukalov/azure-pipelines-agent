@@ -172,7 +172,8 @@ extends:
           # Switch to release branch
           - template: switch-branch.yml
             parameters:
-              branch: $[ dependencies.Verify_release.outputs['SetReleaseVariables.releaseBranch'] ]
+              branch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
+            condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
           - script: git status
 
       #     # Download all agent packages from all previous phases
