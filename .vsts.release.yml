@@ -83,7 +83,7 @@ extends:
               } else {
                 $agentVersion = "${{ parameters.version }}"
               }
-              Write-Host "##vso[task.setVariable variable=agentVersion; isOutput=true]$agentVersion"
+              Write-Host "##vso[task.setVariable variable=agentVersion;isOutput=true]$agentVersion"
               Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]releases/$agentVersion"
             }
 
