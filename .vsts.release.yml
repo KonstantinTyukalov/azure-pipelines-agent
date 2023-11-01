@@ -171,7 +171,8 @@ extends:
 
           # Switch to release branch
           - task: PowerShell@2
-            filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
+            inputs:
+              filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
             env:
               BRANCH_NAME: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')

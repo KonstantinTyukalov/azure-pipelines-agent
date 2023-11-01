@@ -104,7 +104,8 @@ jobs:
     clean: true
 
   - task: PowerShell@2
-    filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
+    inputs:
+      filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
     env:
       BRANCH_NAME: $(checkout_branch)
     condition: ne(variables.checkout_branch, '')
