@@ -38,7 +38,7 @@ parameters:
 extends:
   template: .azure-pipelines/pipeline.yml
   parameters:
-    branch:  $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariable.releaseBranch'] ]
+    branch:  $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
     componentDetection: false
     test: ${{ not(parameters.skipTests) }}
     sign: true
