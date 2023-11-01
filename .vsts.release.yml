@@ -129,14 +129,19 @@ extends:
             versionSpec: "14.15.1"
 
         - pwsh: |
-            cd release
-            npm install
-            if ($env:IS_SCHEDULED_RELEASE -eq 'True'){
-              node createReleaseBranch.js $env:AGENT_VERSION --derivedFrom=${{ parameters.derivedFrom }}
-            }
-            else {
-              node createReleaseBranch.js ${{ parameters.version }} --derivedFrom=${{ parameters.derivedFrom }}
-            }
+            # cd release
+            # npm install
+            # if ($env:IS_SCHEDULED_RELEASE -eq 'True'){
+            #   node createReleaseBranch.js $env:AGENT_VERSION --derivedFrom=${{ parameters.derivedFrom }}
+            # }
+            # else {
+            #   node createReleaseBranch.js ${{ parameters.version }} --derivedFrom=${{ parameters.derivedFrom }}
+            # }
+
+            echo "EDITOR = $env:EDITOR"
+            echo "PAT = $env:PAT"
+            echo "IS_SCHEDULED_RELEASE = $env:IS_SCHEDULED_RELEASE"
+            echo "AGENT_VERSION = $env:AGENT_VERSION"
           env:
             EDITOR: cat
             PAT: $(GithubToken)
