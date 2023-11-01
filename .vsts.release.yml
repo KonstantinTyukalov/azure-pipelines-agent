@@ -112,19 +112,12 @@ extends:
     - stage: Create_Release_Branch
       displayName: Create Release Branch
       dependsOn: Verify_release
-      condition: and(
-                  succeeded(),
-                  eq(dependencies.Verify_release.outputs['Set_variables.SetReleaseVariables.isRelease'], 'True')
-                )
-        # and(
-        #   ,
-        #   # eq(variables['Build.SourceBranch'], 'refs/heads/master')
-        # )
       jobs:
       ################################################################################
       - job: Create_Release_Branch
       ################################################################################
         displayName: Create Release Branch
+        condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -156,7 +149,6 @@ extends:
         dependsOn:
           - build
           - Verify_release
-        condition: and(succeeded(), eq(dependencies.Verify_release.outputs['SetReleaseVariables.isRelease'], 'True'))
         jobs:
         ################################################################################
         - job: publish_agent_packages
@@ -165,6 +157,7 @@ extends:
           pool:
             vmImage: ubuntu-latest
             # name: RMAgentsProdAME
+          condition: and(succeeded(), eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True'))
           steps:
 
           # Clean
