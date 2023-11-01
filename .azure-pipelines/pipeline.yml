@@ -5,9 +5,6 @@ parameters:
 - name: postBuildStages
   type: stageList
   default: []
-- name: dependsOn
-  type: object
-  default: []
 - name: componentDetection
   type: boolean
   default: false
@@ -29,6 +26,12 @@ parameters:
 - name: testProxyAgent
   type: boolean
   default: false
+- name: stageDependencies
+  type: object
+  default: []
+- name: stageCondition
+  type: string
+  default: ''
 
 # Targets
 - name: win_x64
@@ -67,9 +70,10 @@ stages:
 
 - stage: build
   displayName: Build
-  ${{ if ne(length(parameters.dependsOn), 0)}}:
-    dependsOn: ${{ parameters.dependsOn }}
-    condition: in(dependencies.Create_Release_Branch.result, 'Succeeded', 'Skipped')
+  ${{ if ne(length(parameters.stageDependencies), 0)}}:
+    dependsOn: ${{ parameters.stageDependencies }}
+  ${{ if ne(parameters.stageCondition, '') }}:
+    condition: ${{ parameters.stageCondition }}
   jobs:
   # Test Proxy Agent
   # - ${{ if parameters.testProxyAgent }}:
@@ -108,7 +112,7 @@ stages:
           vmImage: windows-2022
         os: win
         arch: x64
-        # branch: ${{ parameters.branch }}
+        branch: ${{ parameters.branch }}
         codeCoverage: true
         componentDetection: ${{ parameters.componentDetection }}
         unitTests: ${{ parameters.test }}

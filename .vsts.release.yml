@@ -35,24 +35,19 @@ parameters:
   default: true
   displayName: Test Proxy Agent
 
-# variables:
-#   ${{ if parameters.buildStageOnly }}:
-#     releaseBranch: ''
-#   ${{ else }}:
-#     releaseBranch: releases/${{ parameters.version }}
-
 extends:
   template: .azure-pipelines/pipeline.yml
   parameters:
-    # branch:  ${{ variables.releaseBranch }}
+    branch:  $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariable.releaseBranch'] ]
     componentDetection: false
     test: ${{ not(parameters.skipTests) }}
     sign: true
     publishArtifacts: true
     testProxyAgent: ${{ parameters.testProxyAgent }}
-    dependsOn:
+    stageDependencies:
       - Verify_release
       - Create_Release_Branch
+    stageCondition: in(dependencies.Create_Release_Branch.result, 'Succeeded', 'Skipped')
 
     preBuildStages:
     - stage: Verify_release
@@ -88,19 +83,9 @@ extends:
             }
 
           name: SetReleaseVariables
-          displayName: Set isRelease variable
+          displayName: Set release-specific variables
           env:
             BSO_VALUE: ${{ parameters.buildStageOnly }}
-
-        - bash: |
-            echo "deps = $DEPS"
-            echo "vars = $VARS"
-          env:
-            DEPS: $[ convertToJSON(dependencies) ]
-            VARS: $[ convertToJSON(variables) ]
-
-        - script: echo "TRUE ayaya"
-          condition: eq(variables.SetReleaseVariables.isRelease, 'True')
 
     - stage: CheckStage
       displayName: CHeck what is inside
