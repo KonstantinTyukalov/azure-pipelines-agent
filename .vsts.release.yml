@@ -121,7 +121,11 @@ extends:
       - job: Create_Release_Branch
       ################################################################################
         displayName: Create Release Branch
-        condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
+        variables:
+          IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+          ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
+          AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
+        condition: eq(variables.IsRelease, 'True')
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -136,15 +140,14 @@ extends:
             # cd release
             # npm install
 
-            # node createReleaseBranch.js $env:AGENT_VERSION --derivedFrom=${{ parameters.derivedFrom }}
+            # node createReleaseBranch.js $(AgentVersion) --derivedFrom=${{ parameters.derivedFrom }}
 
             echo "EDITOR = $env:EDITOR"
             echo "PAT = $env:PAT"
-            echo "AGENT_VERSION = $env:AGENT_VERSION"
+            echo "AGENT_VERSION = $(AgentVersion)"
           env:
             EDITOR: cat
             PAT: $(GithubToken)
-            AGENT_VERSION: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
           displayName: Push release branch to GitHub
 
     postBuildStages:
@@ -159,10 +162,13 @@ extends:
           displayName: Publish Agents (Windows/Linux/OSX)
           pool:
             vmImage: ubuntu-latest
+          variables:
+            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+            ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             # name: RMAgentsProdAME
           condition: and(
               succeeded(),
-              eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
+              eq(variables.IsRelease, 'True')
             )
           steps:
 
@@ -170,20 +176,15 @@ extends:
           - checkout: self
             clean: true
 
-          - script: echo $TESTVAR
+          # Switch to release branch
+          - task: PowerShell@2
+            inputs:
+              filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
             env:
-              TESTVAR: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+              BRANCH_NAME: $(ReleaseBranch)
+            displayName: Switch to release branch
 
-          # # Switch to release branch
-          # - task: PowerShell@2
-          #   inputs:
-          #     filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
-          #   env:
-          #     BRANCH_NAME: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
-          #   condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
-          #   displayName: Switch to release branch
-
-          # - script: git status
+          - script: git status
 
       #     # Download all agent packages from all previous phases
       #     - task: DownloadBuildArtifacts@0
