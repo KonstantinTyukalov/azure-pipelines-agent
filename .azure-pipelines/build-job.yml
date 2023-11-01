@@ -103,11 +103,12 @@ jobs:
   - checkout: self
     clean: true
 
-  # Switch to branch if set
-  # - ${{ if ne(parameters.branch, '') }}:
-  - template: switch-branch.yml
-    parameters:
-      branch: $(checkout_branch)
+  - task: PowerShell@2
+    filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
+    env:
+      BRANCH_NAME: $(checkout_branch)
+    condition: ne(variables.checkout_branch, '')
+    displayName: Switch to specific branch
 
   # 1ES images used on the ARM pool doesn't contain unzip tool, so we need to install it before starting the build
   - ${{ if and(eq(parameters.arch, 'arm64'), ne(parameters.os, 'osx')) }}:

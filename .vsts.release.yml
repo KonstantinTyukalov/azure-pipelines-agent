@@ -170,10 +170,13 @@ extends:
             clean: true
 
           # Switch to release branch
-          - template: switch-branch.yml
-            parameters:
-              branch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
+          - task: PowerShell@2
+            filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
+            env:
+              BRANCH_NAME: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             condition: eq(stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'], 'True')
+            displayName: Switch to release branch
+
           - script: git status
 
       #     # Download all agent packages from all previous phases
