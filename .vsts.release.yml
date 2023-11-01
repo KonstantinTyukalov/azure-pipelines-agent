@@ -92,8 +92,15 @@ extends:
           env:
             BSO_VALUE: ${{ parameters.buildStageOnly }}
 
+        - bash: |
+            echo "deps = $DEPS"
+            echo "vars = $VARS"
+          env:
+            DEPS: $[ convertToJSON(dependencies) ]
+            VARS: $[ convertToJSON(variables) ]
+
         - script: echo "TRUE ayaya"
-          condition: eq(variables.isRelease, 'True')
+          condition: eq(variables.SetReleaseVariables.isRelease, 'True')
 
     - stage: CheckStage
       displayName: CHeck what is inside
