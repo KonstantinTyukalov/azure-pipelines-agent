@@ -70,18 +70,21 @@ extends:
             $currentSprint = (Invoke-WebRequest https://whatsprintis.it -Headers @{"Accept" = "application/json" } | ConvertFrom-Json)
             $isReleaseWeek = $currentSprint.week -eq 2
 
-            $isRelease = $isBuildStageOnly -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
+            $isRelease = ($buildReason -eq 'Manual' -and !$isBuildStageOnly) -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
             $isRelease = $True
             Write-Host "##vso[task.setVariable variable=isRelease;isOutput=true]$isRelease"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
             $isScheduledRelease = $True
-            Write-Host "##vso[task.setVariable variable=isScheduledRelease;isOutput=true]$isScheduledRelease"
 
-            if ($isScheduledRelease) {
+            if ($isRelease) {
+              if ($isScheduledRelease) {
                 $agentVersion = "3.$($currentSprint.sprint).0"
-                Write-Host "##vso[task.setVariable variable=scheduledAgentVersion; isOutput=true]$agentVersion"
-                Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]releases/$agentVersion"
+              } else {
+                $agentVersion = "${{ parameters.version }}"
+              }
+              Write-Host "##vso[task.setVariable variable=agentVersion; isOutput=true]$agentVersion"
+              Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]releases/$agentVersion"
             }
 
           name: SetReleaseVariables
@@ -111,7 +114,8 @@ extends:
 
     - stage: Create_Release_Branch
       displayName: Create Release Branch
-      dependsOn: Verify_release
+      dependsOn:
+      - Verify_release
       jobs:
       ################################################################################
       - job: Create_Release_Branch
@@ -131,22 +135,16 @@ extends:
         - pwsh: |
             # cd release
             # npm install
-            # if ($env:IS_SCHEDULED_RELEASE -eq 'True'){
-            #   node createReleaseBranch.js $env:AGENT_VERSION --derivedFrom=${{ parameters.derivedFrom }}
-            # }
-            # else {
-            #   node createReleaseBranch.js ${{ parameters.version }} --derivedFrom=${{ parameters.derivedFrom }}
-            # }
+
+            # node createReleaseBranch.js $env:AGENT_VERSION --derivedFrom=${{ parameters.derivedFrom }}
 
             echo "EDITOR = $env:EDITOR"
             echo "PAT = $env:PAT"
-            echo "IS_SCHEDULED_RELEASE = $env:IS_SCHEDULED_RELEASE"
             echo "AGENT_VERSION = $env:AGENT_VERSION"
           env:
             EDITOR: cat
             PAT: $(GithubToken)
-            IS_SCHEDULED_RELEASE: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isScheduledRelease'] ]
-            AGENT_VERSION: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.scheduledAgentVersion'] ]
+            AGENT_VERSION: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
           displayName: Push release branch to GitHub
 
     postBuildStages:
@@ -267,7 +265,7 @@ extends:
 
       # - stage: CreatePRs
       #   dependsOn: Release
-      #   condition: not(${{ parameters.onlyGitHubRelease }})
+      #   condition: and(succeeded(), not(${{ parameters.onlyGitHubRelease }}))
       #   jobs:
       #   ################################################################################
       #   - job: create_ado_prs
