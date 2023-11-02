@@ -152,6 +152,8 @@ extends:
             PAT: $(GithubToken)
           displayName: Push release branch to GitHub
 
+        - script: git branch
+
     postBuildStages:
       - stage: Release
         dependsOn:
