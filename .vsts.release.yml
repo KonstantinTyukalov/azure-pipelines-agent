@@ -59,17 +59,20 @@ extends:
         displayName: Set release-specific variables
         steps:
         - pwsh: |
-            $isBuildStageOnly = [System.Convert]::ToBoolean($env:BSO_VALUE)
-            $buildReason = $env:BUILD_REASON
+            $isBuildStageOnly = [System.Convert]::ToBoolean('${{ parameters.buildStageOnly }}')
+            $buildReason = '$(Build.Reason)'
 
             $currentSprint = (Invoke-WebRequest https://whatsprintis.it -Headers @{"Accept" = "application/json" } | ConvertFrom-Json)
-            $isReleaseWeek = $currentSprint.week -eq 2
+            $isReleaseWeek = $currentSprint.week -eq 3
+            Write-Host "isReleaseWeek = $isReleaseWeek"
 
             $isRelease = ($buildReason -eq 'Manual' -and !$isBuildStageOnly) -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
+            Write-Host "isRelease = $isRelease"
             $isRelease = $True
             Write-Host "##vso[task.setVariable variable=isRelease;isOutput=true]$isRelease"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
+            Write-Host "isScheduledRelease = $isScheduledRelease"
             $isScheduledRelease = $True
 
             if ($isRelease) {
@@ -78,14 +81,16 @@ extends:
               } else {
                 $agentVersion = "${{ parameters.version }}"
               }
+              Write-Host "agentVersion = $agentVersion"
               Write-Host "##vso[task.setVariable variable=agentVersion;isOutput=true]$agentVersion"
-              Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]releases/$agentVersion"
+
+              $releaseBranch = "releases/$agentVersion"
+              Write-Host "releaseBranch = $releaseBranch"
+              Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]$releaseBranch"
             }
 
           name: SetReleaseVariables
           displayName: Set release-specific variables
-          env:
-            BSO_VALUE: ${{ parameters.buildStageOnly }}
 
     - stage: CheckStage
       displayName: CHeck what is inside
