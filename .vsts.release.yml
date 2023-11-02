@@ -49,7 +49,7 @@ extends:
       - Create_Release_Branch
     stageCondition: |
       and(
-        succeeded(Verify_release),
+        succeeded('Verify_release'),
         in(dependencies.Create_Release_Branch.result, 'Succeeded', 'Skipped')
       )
 
