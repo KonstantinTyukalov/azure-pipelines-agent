@@ -122,10 +122,11 @@ extends:
           IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
           ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
           AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
-        condition: eq(variables.IsRelease, 'True')
+        condition: and(succeeded(), eq(variables.IsRelease, 'True'))
         pool:
           vmImage: ubuntu-latest
         steps:
+
         - checkout: self
 
         # - task: NodeTool@0
@@ -163,10 +164,7 @@ extends:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
             # name: RMAgentsProdAME
-          condition: and(
-              succeeded(),
-              eq(variables.IsRelease, 'True')
-            )
+          condition: and(succeeded(), eq(variables.IsRelease, 'True'))
           steps:
 
           # Clean
@@ -176,7 +174,7 @@ extends:
           # Switch to release branch
           - template: switch-branch.yml
             parameters:
-              branch: ${{ variables.releaseBranch }}
+              branch: ${{ variables.ReleaseBranch }}
 
           - script: git status
 
