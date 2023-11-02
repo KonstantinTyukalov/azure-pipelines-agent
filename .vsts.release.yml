@@ -47,7 +47,11 @@ extends:
     stageDependencies:
       - Verify_release
       - Create_Release_Branch
-    stageCondition: in(dependencies.Create_Release_Branch.result, 'Succeeded', 'Skipped')
+    stageCondition: |
+      and(
+        succeeded(Verify_release),
+        in(dependencies.Create_Release_Branch.result, 'Succeeded', 'Skipped')
+      )
 
     preBuildStages:
     - stage: Verify_release
