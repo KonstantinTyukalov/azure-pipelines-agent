@@ -169,12 +169,9 @@ extends:
             clean: true
 
           # Switch to release branch
-          - task: PowerShell@2
-            inputs:
-              filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
-            env:
-              BRANCH_NAME: $(ReleaseBranch)
-            displayName: Switch to release branch
+          - template: switch-branch.yml
+            parameters:
+              branch: ${{ variables.releaseBranch }}
 
           - script: git status
 

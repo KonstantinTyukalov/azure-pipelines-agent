@@ -66,10 +66,6 @@ parameters:
   - agent
   - pipelines-agent
 
-# - name: dependsOn
-#   type: object
-#   default: []
-
 jobs:
 
 - job: ${{ parameters.jobName }}
@@ -103,13 +99,11 @@ jobs:
   - checkout: self
     clean: true
 
-  - task: PowerShell@2
-    inputs:
-      filePath: $(Build.SourcesDirectory)/.azure-pipelines/scripts/Switch-Branch.ps1
-    env:
-      BRANCH_NAME: $(CheckoutBranch)
-    condition: ne(variables.CheckoutBranch, '')
-    displayName: Switch to specific branch
+  # Switch to branch if set
+  - ${{ if ne(parameters.branch, '') }}:
+    - template: switch-branch.yml
+      parameters:
+        branch: $(CheckoutBranch)
 
   # 1ES images used on the ARM pool doesn't contain unzip tool, so we need to install it before starting the build
   - ${{ if and(eq(parameters.arch, 'arm64'), ne(parameters.os, 'osx')) }}:
