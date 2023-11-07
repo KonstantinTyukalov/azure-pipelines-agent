@@ -3,7 +3,7 @@ parameters:
   type: string
 
 steps:
-- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+# - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
   - script: |
       # git config user.email "azure-pipelines-bot@microsoft.com"
       # git config user.name "azure-pipelines-bot"
