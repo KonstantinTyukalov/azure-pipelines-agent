@@ -75,7 +75,7 @@ stages:
   ${{ if ne(parameters.stageCondition, '') }}:
     condition: ${{ parameters.stageCondition }}
   jobs:
-  # Test Proxy Agent
+  # # Test Proxy Agent
   # - ${{ if parameters.testProxyAgent }}:
   #   - job: test_proxy_agent
   #     displayName: Test Proxy Agent
@@ -102,25 +102,25 @@ stages:
   #             --templateParameters "{ \"branch\": \"${branch}\", \"template_timeout\": 3 }"
   #       displayName: Test Proxy Agent
 
-  # Windows (x64)
-  - ${{ if parameters.win_x64 }}:
-    - template: build-jobs.yml
-      parameters:
-        jobName: build_windows_x64
-        displayName: Windows (x64)
-        pool:
-          vmImage: windows-2022
-        os: win
-        arch: x64
-        branch: ${{ parameters.branch }}
-        codeCoverage: true
-        componentDetection: ${{ parameters.componentDetection }}
-        unitTests: ${{ parameters.test }}
-        functionalTests: ${{ parameters.test }}
-        sign: ${{ parameters.sign }}
-        verifySigning: ${{ parameters.sign }}
-        publishArtifacts: ${{ parameters.publishArtifacts }}
-        buildAlternatePackage: ${{ parameters.buildAlternatePackage }}
+  # # Windows (x64)
+  # - ${{ if parameters.win_x64 }}:
+  #   - template: build-jobs.yml
+  #     parameters:
+  #       jobName: build_windows_x64
+  #       displayName: Windows (x64)
+  #       pool:
+  #         vmImage: windows-2022
+  #       os: win
+  #       arch: x64
+  #       branch: ${{ parameters.branch }}
+  #       codeCoverage: true
+  #       componentDetection: ${{ parameters.componentDetection }}
+  #       unitTests: ${{ parameters.test }}
+  #       functionalTests: ${{ parameters.test }}
+  #       sign: ${{ parameters.sign }}
+  #       verifySigning: ${{ parameters.sign }}
+  #       publishArtifacts: ${{ parameters.publishArtifacts }}
+  #       buildAlternatePackage: ${{ parameters.buildAlternatePackage }}
 
   # # Windows (x86)
   # - ${{ if parameters.win_x86 }}:
@@ -140,23 +140,23 @@ stages:
   #       publishArtifacts: ${{ parameters.publishArtifacts }}
   #       buildAlternatePackage: ${{ parameters.buildAlternatePackage }}
 
-  # # Linux (x64)
-  # - ${{ if parameters.linux_x64 }}:
-  #   - template: build-jobs.yml
-  #     parameters:
-  #       jobName: build_linux_x64
-  #       displayName: Linux (x64)
-  #       pool:
-  #         vmImage: ubuntu-20.04
-  #       os: linux
-  #       arch: x64
-  #       branch: ${{ parameters.branch }}
-  #       componentDetection: ${{ parameters.componentDetection }}
-  #       unitTests: ${{ parameters.test }}
-  #       functionalTests: ${{ parameters.test }}
-  #       sign: ${{ parameters.sign }}
-  #       publishArtifacts: ${{ parameters.publishArtifacts }}
-  #       buildAlternatePackage: ${{ parameters.buildAlternatePackage }}
+  # Linux (x64)
+  - ${{ if parameters.linux_x64 }}:
+    - template: build-jobs.yml
+      parameters:
+        jobName: build_linux_x64
+        displayName: Linux (x64)
+        pool:
+          vmImage: ubuntu-20.04
+        os: linux
+        arch: x64
+        branch: ${{ parameters.branch }}
+        componentDetection: ${{ parameters.componentDetection }}
+        unitTests: ${{ parameters.test }}
+        functionalTests: ${{ parameters.test }}
+        sign: ${{ parameters.sign }}
+        publishArtifacts: ${{ parameters.publishArtifacts }}
+        buildAlternatePackage: ${{ parameters.buildAlternatePackage }}
 
   # # Linux (ARM)
   # - ${{ if parameters.linux_arm }}:

@@ -105,10 +105,10 @@ jobs:
       parameters:
         branch: $(CheckoutBranch)
 
-  # 1ES images used on the ARM pool doesn't contain unzip tool, so we need to install it before starting the build
-  - ${{ if and(eq(parameters.arch, 'arm64'), ne(parameters.os, 'osx')) }}:
-    - script: sudo apt-get update && sudo apt-get -y install unzip
-      displayName: Install unzip
+  # # 1ES images used on the ARM pool doesn't contain unzip tool, so we need to install it before starting the build
+  # - ${{ if and(eq(parameters.arch, 'arm64'), ne(parameters.os, 'osx')) }}:
+  #   - script: sudo apt-get update && sudo apt-get -y install unzip
+  #     displayName: Install unzip
 
   # Build agent layout
   - script: ${{ variables.devCommand }} layout Release ${{ parameters.os }}-${{ parameters.arch }}
@@ -119,11 +119,11 @@ jobs:
       env:
         ADO_ENABLE_LOGISSUE: true
 
-  # Check if broken symlinks exist in the agent build
-  - task: Bash@3
-    inputs:
-      filePath: src/Misc/check-symlinks.sh
-    displayName: Check symlinks
+  # # Check if broken symlinks exist in the agent build
+  # - task: Bash@3
+  #   inputs:
+  #     filePath: src/Misc/check-symlinks.sh
+  #   displayName: Check symlinks
 
   # # Run l0 tests
   # - ${{ if parameters.unitTests }}:
@@ -152,7 +152,7 @@ jobs:
   #     - task: UseDotNet@2
   #       displayName: Install .NET Core 6 SDK
   #       inputs:
-  #        version: '6.0.413'
+  #        version: '6.0.416'
   #        packageType: sdk
   #        performMultiLevelLookup: true
   #   - script: ${{ variables.devCommand }} testl1 Debug ${{ parameters.os }}-${{ parameters.arch }}
@@ -193,11 +193,11 @@ jobs:
   #       summaryFileLocation: _reports/**/Cobertura.xml
   #       pathToSources: src
 
-  - ${{ if eq(parameters.os, 'osx') }}:
-    - task: UseDotNet@2
-      inputs:
-        packageType: 'sdk'
-        version: '6.0.x'
+  # - ${{ if eq(parameters.os, 'osx') }}:
+  #   - task: UseDotNet@2
+  #     inputs:
+  #       packageType: 'sdk'
+  #       version: '6.0.x'
 
   # - ${{ if parameters.sign }}:
   #   # Signing steps
@@ -206,7 +206,7 @@ jobs:
   #       layoutRoot: ${{ variables.layoutRoot }}
   #       isWindows: ${{ eq(parameters.os, 'win') }}
 
-  # Publish artifacts
+  # # Publish artifacts
   # - ${{ if parameters.publishArtifact }}:
 
   #   # Package .NET Core Windows dependency (VC++ Redistributable)
@@ -216,30 +216,30 @@ jobs:
   #         layoutRoot: ${{ variables.layoutRoot }}
   #         flavor: ${{ parameters.arch }}
 
-    # Create agent package zip
-    - script: "${{ variables.devCommand }} package Release ${{ parameters.os }}-${{ parameters.arch }}"
-      workingDirectory: src
-      displayName: Package Release
+  #   # Create agent package zip
+  #   - script: "${{ variables.devCommand }} package Release ${{ parameters.os }}-${{ parameters.arch }}"
+  #     workingDirectory: src
+  #     displayName: Package Release
 
-    - script: "${{ variables.devCommand }} hash Release ${{ parameters.os }}-${{ parameters.arch }}"
-      workingDirectory: src
-      displayName: Hash Package
+  #   - script: "${{ variables.devCommand }} hash Release ${{ parameters.os }}-${{ parameters.arch }}"
+  #     workingDirectory: src
+  #     displayName: Hash Package
 
-    # Upload agent package zip as build artifact
-    - task: PublishBuildArtifacts@1.200.0
-      displayName: Publish Artifact
-      inputs:
-        pathToPublish: _package
-        artifactName: agent
-        artifactType: container
+  #   # Upload agent package zip as build artifact
+  #   - task: PublishBuildArtifacts@1.200.0
+  #     displayName: Publish Artifact
+  #     inputs:
+  #       pathToPublish: _package
+  #       artifactName: agent
+  #       artifactType: container
 
-    # Publish agent package hash too
-    - task: PublishBuildArtifacts@1.200.0
-      displayName: Publish Artifact
-      inputs:
-        pathToPublish: _package_hash
-        artifactName: hash
-        artifactType: container
+  #   # Publish agent package hash too
+  #   - task: PublishBuildArtifacts@1.200.0
+  #     displayName: Publish Artifact
+  #     inputs:
+  #       pathToPublish: _package_hash
+  #       artifactName: hash
+  #       artifactType: container
 
   # # Signing verification
   # - ${{ if parameters.verifySigning }}:

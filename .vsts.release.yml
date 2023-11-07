@@ -1,5 +1,5 @@
 schedules:
-- cron: '0 * * * *'
+- cron: '0 6 * * 2'
   displayName: Scheduled weekly run
   branches:
     include:
@@ -9,7 +9,7 @@ parameters:
 - name: version
   type: string
   displayName: Version
-  default: '3.999999.0'
+  default: '3.999.999'
 - name: derivedFrom
   type: string
   displayName: Derived From Version
@@ -72,12 +72,12 @@ extends:
 
             $isRelease = ($buildReason -eq 'Manual' -and !$isBuildStageOnly) -or ($buildReason -eq 'Schedule' -and !$isReleaseWeek)
             Write-Host "isRelease = $isRelease"
-            $isRelease = $True
+            $isRelease = $true
             Write-Host "##vso[task.setVariable variable=isRelease;isOutput=true]$isRelease"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
+            $isScheduledRelease = $false
             Write-Host "isScheduledRelease = $isScheduledRelease"
-            $isScheduledRelease = $True
 
             if ($isRelease) {
               if ($isScheduledRelease) {
@@ -95,23 +95,6 @@ extends:
 
           name: SetReleaseVariables
           displayName: Set release-specific variables
-
-    - stage: CheckStage
-      displayName: CHeck what is inside
-      dependsOn:
-      - Verify_release
-      jobs:
-      - job: check
-        variables:
-        - name: stage1dep
-          value: $[converttojson(stageDependencies)]
-        - name: deps
-          value: $[converttojson(dependencies)]
-        steps:
-        - script: echo '$(stage1dep)'
-          displayName: Check what is inside stage dependencies
-        - script: echo '$(deps)'
-          displayName: Check what is inside just dependencies
 
     - stage: Create_Release_Branch
       displayName: Create Release Branch
@@ -138,21 +121,16 @@ extends:
         #   inputs:
         #     versionSpec: "14.15.1"
 
-        - pwsh: |
+        - script: |
             # cd release
             # npm install
 
             # node createReleaseBranch.js $(AgentVersion) --derivedFrom=${{ parameters.derivedFrom }}
-
-            echo "EDITOR = $env:EDITOR"
-            echo "PAT = $env:PAT"
-            echo "AGENT_VERSION = $(AgentVersion)"
+            echo "Agent version: $(AgentVersion)"
           env:
             EDITOR: cat
             PAT: $(GithubToken)
           displayName: Push release branch to GitHub
-
-        - script: git branch
 
     postBuildStages:
       - stage: Release
@@ -165,11 +143,12 @@ extends:
         ################################################################################
           displayName: Publish Agents (Windows/Linux/OSX)
           pool:
+            # name: RMAgentsProdAME
             vmImage: ubuntu-latest
           variables:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
-            # name: RMAgentsProdAME
+            AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
           condition: and(succeeded(), eq(variables.IsRelease, 'True'))
           steps:
 
@@ -180,128 +159,135 @@ extends:
           # Switch to release branch
           - template: switch-branch.yml
             parameters:
-              branch: ${{ variables.ReleaseBranch }}
+              branch: $(ReleaseBranch)
 
-          - script: git status
+          # # Download all agent packages from all previous phases
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: Download Agent Packages
+          #   inputs:
+          #     artifactName: agent
 
-      #     # Download all agent packages from all previous phases
-      #     - task: DownloadBuildArtifacts@0
-      #       displayName: Download Agent Packages
-      #       inputs:
-      #         artifactName: agent
+          # # Upload agent packages to Azure blob storage and refresh Azure CDN
+          # - powershell: |
+          #     Write-Host "Preloading Azure modules." # This is for better performance, to avoid module-autoloading.
+          #     Import-Module Azure, Az.Accounts, Az.Storage, Az.Cdn -ErrorAction Ignore -PassThru
+          #     $uploadFiles = New-Object System.Collections.ArrayList
+          #     $certificateThumbprint = (Get-ItemProperty -Path "$(ServicePrincipalReg)").ServicePrincipalCertThumbprint
+          #     $clientId = (Get-ItemProperty -Path "$(ServicePrincipalReg)").ServicePrincipalClientId
+          #     Write-Host "##vso[task.setsecret]$certificateThumbprint"
+          #     Write-Host "##vso[task.setsecret]$clientId"
+          #     Login-AzAccount -ServicePrincipal -CertificateThumbprint $certificateThumbprint -ApplicationId $clientId -TenantId $(TenantId)
+          #     Select-AzSubscription -SubscriptionId $(SubscriptionId)
+          #     $storage = Get-AzStorageAccount -ResourceGroupName vstsagentpackage -AccountName vstsagentpackage
+          #     $versionDir = "$(AgentVersion)"
+          #     Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent" | ForEach-Object {
+          #       $target=$_
+          #       Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent/$target" -Include "*.zip","*.tar.gz" | ForEach-Object {
+          #         $executable = $_
+          #         Write-Host "Uploading $executable to BlobStorage vstsagentpackage/agent/$versionDir"
+          #         Set-AzStorageBlobContent -Context $storage.Context -Container agent -File "$(System.ArtifactsDirectory)/agent/$target/$executable" -Blob "$versionDir/$executable" -Force
+          #         $uploadFiles.Add("/agent/$versionDir/$executable")
+          #       }
+          #     }
+          #     Write-Host "Purge Azure CDN Cache"
+          #     Unpublish-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -PurgeContent $uploadFiles
+          #     Write-Host "Force Refresh Azure CDN Cache"
+          #     Publish-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -LoadContent $uploadFiles
+          #   displayName: Upload to Azure Blob
 
-      #     # Upload agent packages to Azure blob storage and refresh Azure CDN
-      #     - powershell: |
-      #         Write-Host "Preloading Azure modules." # This is for better performance, to avoid module-autoloading.
-      #         Import-Module Azure, Az.Accounts, Az.Storage, Az.Cdn -ErrorAction Ignore -PassThru
-      #         $uploadFiles = New-Object System.Collections.ArrayList
-      #         $certificateThumbprint = (Get-ItemProperty -Path "$(ServicePrincipalReg)").ServicePrincipalCertThumbprint
-      #         $clientId = (Get-ItemProperty -Path "$(ServicePrincipalReg)").ServicePrincipalClientId
-      #         Write-Host "##vso[task.setsecret]$certificateThumbprint"
-      #         Write-Host "##vso[task.setsecret]$clientId"
-      #         Login-AzAccount -ServicePrincipal -CertificateThumbprint $certificateThumbprint -ApplicationId $clientId -TenantId $(TenantId)
-      #         Select-AzSubscription -SubscriptionId $(SubscriptionId)
-      #         $storage = Get-AzStorageAccount -ResourceGroupName vstsagentpackage -AccountName vstsagentpackage
-      #         $versionDir = "${{ parameters.version }}"
-      #         Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent" | ForEach-Object {
-      #           $target=$_
-      #           Get-ChildItem -LiteralPath "$(System.ArtifactsDirectory)/agent/$target" -Include "*.zip","*.tar.gz" | ForEach-Object {
-      #             $executable = $_
-      #             Write-Host "Uploading $executable to BlobStorage vstsagentpackage/agent/$versionDir"
-      #             Set-AzStorageBlobContent -Context $storage.Context -Container agent -File "$(System.ArtifactsDirectory)/agent/$target/$executable" -Blob "$versionDir/$executable" -Force
-      #             $uploadFiles.Add("/agent/$versionDir/$executable")
-      #           }
-      #         }
-      #         Write-Host "Purge Azure CDN Cache"
-      #         Unpublish-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -PurgeContent $uploadFiles
-      #         Write-Host "Force Refresh Azure CDN Cache"
-      #         Publish-AzCdnEndpointContent -EndpointName vstsagentpackage -ProfileName vstsagentpackage -ResourceGroupName vstsagentpackage -LoadContent $uploadFiles
-      #       displayName: Upload to Azure Blob
+          # # Download all agent hashes created in previous phases
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: Download Agent Hashes
+          #   inputs:
+          #     artifactName: hash
+          #     downloadPath: $(Build.SourcesDirectory)/_hashes
 
-      #     # Download all agent hashes created in previous phases
-      #     - task: DownloadBuildArtifacts@0
-      #       displayName: Download Agent Hashes
-      #       inputs:
-      #         artifactName: hash
-      #         downloadPath: $(Build.SourcesDirectory)/_hashes
+          # Fill release notes with agent version and package hashes
+          - script: |
+              # cd release
+              # node fillReleaseNotesTemplate.js $(AgentVersion)
+              echo "Agent version: $(AgentVersion)"
+            displayName: Fill release notes
 
-      #     # Fill release notes with agent version and package hashes
-      #     - script: |
-      #         cd release
-      #         node fillReleaseNotesTemplate.js ${{ parameters.version }}
-      #       displayName: Fill release notes
+          # # Create agent release on Github
+          # - powershell: |
+          #     Write-Host "Creating github release."
+          #     $releaseNotes = [System.IO.File]::ReadAllText("$(Build.SourcesDirectory)\releaseNote.md")
+          #     $releaseData = @{
+          #       tag_name = "v$(AgentVersion)";
+          #       target_commitish = "$(Build.SourceVersion)";
+          #       name = "v$(AgentVersion)";
+          #       body = $releaseNotes;
+          #       draft = $false;
+          #       prerelease = $true;
+          #     }
+          #     $releaseParams = @{
+          #       Uri = "https://api.github.com/repos/Microsoft/azure-pipelines-agent/releases";
+          #       Method = 'POST';
+          #       Headers = @{
+          #         Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("vsts:$(GithubToken)"));
+          #       }
+          #       ContentType = 'application/json';
+          #       Body = (ConvertTo-Json $releaseData -Compress)
+          #     }
+          #     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          #     $releaseCreated = Invoke-RestMethod @releaseParams
+          #     Write-Host $releaseCreated
+          #     $releaseId = $releaseCreated.id
+          #     $assets = [System.IO.File]::ReadAllText("$(Build.SourcesDirectory)\assets.json").Replace("<AGENT_VERSION>","$(AgentVersion)")
+          #     $assetsParams = @{
+          #       Uri = "https://uploads.github.com/repos/Microsoft/azure-pipelines-agent/releases/$releaseId/assets?name=assets.json"
+          #       Method = 'POST';
+          #       Headers = @{
+          #         Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("vsts:$(GithubToken)"));
+          #       }
+          #       ContentType = 'application/octet-stream';
+          #       Body = [system.Text.Encoding]::UTF8.GetBytes($assets)
+          #     }
+          #     Invoke-RestMethod @assetsParams
+          #   displayName: Create agent release on Github
 
-      #     # Create agent release on Github
-      #     - powershell: |
-      #         Write-Host "Creating github release."
-      #         $releaseNotes = [System.IO.File]::ReadAllText("$(Build.SourcesDirectory)\releaseNote.md")
-      #         $releaseData = @{
-      #           tag_name = "v${{ parameters.version }}";
-      #           target_commitish = "$(Build.SourceVersion)";
-      #           name = "v${{ parameters.version }}";
-      #           body = $releaseNotes;
-      #           draft = $false;
-      #           prerelease = $true;
-      #         }
-      #         $releaseParams = @{
-      #           Uri = "https://api.github.com/repos/Microsoft/azure-pipelines-agent/releases";
-      #           Method = 'POST';
-      #           Headers = @{
-      #             Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("vsts:$(GithubToken)"));
-      #           }
-      #           ContentType = 'application/json';
-      #           Body = (ConvertTo-Json $releaseData -Compress)
-      #         }
-      #         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-      #         $releaseCreated = Invoke-RestMethod @releaseParams
-      #         Write-Host $releaseCreated
-      #         $releaseId = $releaseCreated.id
-      #         $assets = [System.IO.File]::ReadAllText("$(Build.SourcesDirectory)\assets.json").Replace("<AGENT_VERSION>","${{ parameters.version }}")
-      #         $assetsParams = @{
-      #           Uri = "https://uploads.github.com/repos/Microsoft/azure-pipelines-agent/releases/$releaseId/assets?name=assets.json"
-      #           Method = 'POST';
-      #           Headers = @{
-      #             Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("vsts:$(GithubToken)"));
-      #           }
-      #           ContentType = 'application/octet-stream';
-      #           Body = [system.Text.Encoding]::UTF8.GetBytes($assets)
-      #         }
-      #         Invoke-RestMethod @assetsParams
-      #       displayName: Create agent release on Github
+      - stage: CreatePRs
+        dependsOn:
+        - Release
+        - Verify_release
+        condition: and(succeeded(), not(${{ parameters.onlyGitHubRelease }}))
+        jobs:
+        ################################################################################
+        - job: create_ado_prs
+        ################################################################################
+          displayName: Create PRs in AzureDevOps and ConfigChange
+          pool:
+            vmImage: ubuntu-latest
+          variables:
+            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+            ReleaseBranch: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
+            AgentVersion: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.agentVersion'] ]
+          condition: and(succeeded(), eq(variables.IsRelease, 'True'))
 
-      # - stage: CreatePRs
-      #   dependsOn: Release
-      #   condition: and(succeeded(), not(${{ parameters.onlyGitHubRelease }}))
-      #   jobs:
-      #   ################################################################################
-      #   - job: create_ado_prs
-      #   ################################################################################
-      #     displayName: Create PRs in AzureDevOps and ConfigChange
-      #     pool:
-      #       vmImage: ubuntu-latest
+          steps:
+          - checkout: self
 
-      #     steps:
-      #     - checkout: self
+          - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+            - script: echo $(ReleaseBranch) # git checkout $(ReleaseBranch)
+              displayName: Checkout release branch
 
-      #     - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-      #       - script: git checkout ${{ variables.releaseBranch }}
-      #         displayName: Checkout release branch
+          # # Download all agent hashes created in previous phases
+          # - task: DownloadBuildArtifacts@0
+          #   displayName: Download Agent Hashes
+          #   inputs:
+          #     artifactName: hash
+          #     downloadPath: $(Build.SourcesDirectory)/_hashes
 
-      #     # Download all agent hashes created in previous phases
-      #     - task: DownloadBuildArtifacts@0
-      #       displayName: Download Agent Hashes
-      #       inputs:
-      #         artifactName: hash
-      #         downloadPath: $(Build.SourcesDirectory)/_hashes
-
-      #     - bash: |
-      #         set -x
-      #         cd release
-      #         npm install
-      #         ls
-      #         node createAdoPrs.js ${{ parameters.version }}
-      #       displayName: Create PRs in AzureDevOps and ConfigChange
-      #       env:
-      #         USERNAME: $(User)
-      #         PAT: $(AdoPAT)
-      #         USEREMAIL: $(Email)
+          - bash: |
+              # set -x
+              # cd release
+              # npm install
+              # ls
+              # node createAdoPrs.js $(AgentVersion)
+              echo "Agent version: $(AgentVersion)"
+            displayName: Create PRs in AzureDevOps and ConfigChange
+            env:
+              USERNAME: $(User)
+              PAT: $(AdoPAT)
+              USEREMAIL: $(Email)
