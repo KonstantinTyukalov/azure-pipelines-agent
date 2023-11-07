@@ -268,9 +268,9 @@ extends:
           steps:
           - checkout: self
 
-          - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-            - script: echo $(ReleaseBranch) # git checkout $(ReleaseBranch)
-              displayName: Checkout release branch
+          # - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+          - script: echo $(ReleaseBranch) # git checkout $(ReleaseBranch)
+            displayName: Checkout release branch
 
           # # Download all agent hashes created in previous phases
           # - task: DownloadBuildArtifacts@0
