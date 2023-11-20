@@ -304,21 +304,14 @@ extends:
 
       - stage: S_SendNotifications
         dependsOn:
-        - Release
-        - Verify_release
-        condition: |
-          and(
-            succeeded('Verify_release'),
-            not(${{ parameters.onlyGitHubRelease }}),
-            in(dependencies.Release.result, 'Succeeded', 'SucceededWithIssues', 'Failed')
-          )
+        - CreatePRs
+        condition: in(dependencies.CreatePRs.result, 'Succeeded', 'SucceededWithIssues', 'Failed')
         pool:
           vmImage: ubuntu-latest
         jobs:
         - job: j_SendPrNotifications
           displayName: Send Notifications about PRs
           variables:
-            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ADO_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_ID'] ]
             ADO_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_LINK'] ]
             CC_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_ID'] ]
@@ -332,6 +325,6 @@ extends:
               echo "CC_PR_LINK: $(CC_PR_LINK)"
             displayName: Send MS Teams notification
             # We only want to send a notification if this is a scheduled release
-            condition: eq(variables['build.reason'], 'Schedule')
+            # condition: eq(variables['build.reason'], 'Schedule')
             env:
               TEAMS_WEBHOOK: $(MSTeamsUri)

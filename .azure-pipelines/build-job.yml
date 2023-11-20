@@ -111,13 +111,13 @@ jobs:
   #     displayName: Install unzip
 
   # Build agent layout
-  - script: ${{ variables.devCommand }} layout Release ${{ parameters.os }}-${{ parameters.arch }}
-    workingDirectory: src
-    displayName: Build & Layout Release
-    retryCountOnTaskFailure: 5
-    ${{ if parameters.enableADOLogIssue }}:
-      env:
-        ADO_ENABLE_LOGISSUE: true
+  # - script: ${{ variables.devCommand }} layout Release ${{ parameters.os }}-${{ parameters.arch }}
+  #   workingDirectory: src
+  #   displayName: Build & Layout Release
+  #   retryCountOnTaskFailure: 5
+  #   ${{ if parameters.enableADOLogIssue }}:
+  #     env:
+  #       ADO_ENABLE_LOGISSUE: true
 
   # # Check if broken symlinks exist in the agent build
   # - task: Bash@3
