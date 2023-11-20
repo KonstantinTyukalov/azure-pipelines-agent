@@ -306,11 +306,11 @@ extends:
         dependsOn:
         - Release
         - Verify_release
-        condition:
+        condition: |
           and(
             succeeded('Verify_release'),
-            not(${{ parameters.onlyGitHubRelease }})),
-            not(canceled('Release'))
+            not(${{ parameters.onlyGitHubRelease }}),
+            in(dependencies.Release.result, 'Succeeded', 'SucceededWithIssues', 'Failed')
           )
         pool:
           vmImage: ubuntu-latest
