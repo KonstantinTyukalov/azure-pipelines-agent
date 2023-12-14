@@ -307,6 +307,7 @@ extends:
           dependsOn: create_ado_prs
           condition: and(succeeded(), eq(variables.IsRelease, 'True'))
           variables:
+            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
             ADO_PR_ID: $[ dependencies.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_ID'] ]
             ADO_PR_LINK: $[ dependencies.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_LINK'] ]
             CC_PR_ID: $[ dependencies.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_ID'] ]
@@ -319,29 +320,32 @@ extends:
               echo "CC_PR_LINK: $env:CC_PR_LINK"
             displayName: Send MS Teams notification
 
-      # - stage: S_SendNotifications
-      #   dependsOn:
-      #   - CreatePRs
-      #   condition: in(dependencies.CreatePRs.result, 'Succeeded', 'SucceededWithIssues', 'Failed')
-      #   pool:
-      #     vmImage: ubuntu-latest
-      #   jobs:
-      #   - job: j_SendPrNotifications
-      #     displayName: Send Notifications about PRs
-      #     variables:
-      #       ADO_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_ID'] ]
-      #       ADO_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_LINK'] ]
-      #       CC_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_ID'] ]
-      #       CC_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_LINK'] ]
-      #     condition: eq(variables.IsRelease, 'True')
-      #     steps:
-      #     - pwsh: |
-      #         echo "ADO_PR_ID: $(ADO_PR_ID)"
-      #         echo "ADO_PR_LINK: $(ADO_PR_LINK)"
-      #         echo "CC_PR_ID: $(CC_PR_ID)"
-      #         echo "CC_PR_LINK: $(CC_PR_LINK)"
-      #       displayName: Send MS Teams notification
-      #       # We only want to send a notification if this is a scheduled release
-      #       # condition: eq(variables['build.reason'], 'Schedule')
-      #       env:
-      #         TEAMS_WEBHOOK: $(MSTeamsUri)
+      - stage: S_Notifications
+        displayName: Send Notifications
+        dependsOn:
+        - Verify_release
+        - CreatePRs
+        condition: always()
+        pool:
+          vmImage: ubuntu-latest
+        jobs:
+        - job: J_SendPrNotifications
+          displayName: Send Notifications about PRs
+          variables:
+            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+            ADO_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_ID'] ]
+            ADO_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_LINK'] ]
+            CC_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_ID'] ]
+            CC_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_LINK'] ]
+          condition: eq(variables.IsRelease, 'True')
+          steps:
+          - pwsh: |
+              echo "ADO_PR_ID: $(ADO_PR_ID)"
+              echo "ADO_PR_LINK: $(ADO_PR_LINK)"
+              echo "CC_PR_ID: $(CC_PR_ID)"
+              echo "CC_PR_LINK: $(CC_PR_LINK)"
+            displayName: Send MS Teams notification
+            # We only want to send a notification if this is a scheduled release
+            # condition: eq(variables['build.reason'], 'Schedule')
+            env:
+              TEAMS_WEBHOOK: $(MSTeamsUri)
