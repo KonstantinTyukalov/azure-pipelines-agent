@@ -81,7 +81,17 @@ extends:
 
             if ($isRelease) {
               if ($isScheduledRelease) {
-                $agentVersion = "3.$($currentSprint.sprint).0"
+                $majorAndMinorVersion = "3.$($currentSprint.sprint)"
+                $patchVersion = 0
+                ## Checking existing branches while not found unused patch version in sprint
+                while ($true) {
+                  $agentVersion = "$majorAndMinorVersion.$patchVersion"
+                  git ls-remote --exit-code --heads origin refs/heads/releases/$agentVersion
+                  if ($LASTEXITCODE -eq 2) {
+                      break
+                  }
+                  $patchVersion++
+                }
               } else {
                 $agentVersion = "${{ parameters.version }}"
                 if ($agentVersion -eq 'NotSet') {
