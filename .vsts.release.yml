@@ -76,7 +76,7 @@ extends:
             Write-Host "##vso[task.setVariable variable=isRelease;isOutput=true]$isRelease"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
-            $isScheduledRelease = $false
+            $isScheduledRelease = $true
             Write-Host "isScheduledRelease = $isScheduledRelease"
 
             if ($isRelease) {
