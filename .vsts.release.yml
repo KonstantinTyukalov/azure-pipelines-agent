@@ -322,21 +322,25 @@ extends:
         pool:
           vmImage: ubuntu-latest
         jobs:
-        - job: J_SendPrNotifications
+        - job: j_SendPRsNotifications
           displayName: Send Notifications about PRs
           variables:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
-            AdoPrId: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrId'] ]
-            AdoPrLink: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrLink'] ]
-            CcPrId: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrId'] ]
-            CcPrLink: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrLink'] ]
-          condition: eq(variables.IsRelease, 'True')
+          condition: |
+            and(
+              eq(variables.IsRelease, 'True'),
+              not(${{ parameters.onlyGitHubRelease }})
+            )
           steps:
           - pwsh: |
-              echo "ADO_PR_ID: $(AdoPrId)"
-              echo "ADO_PR_LINK: $(AdoPrLink)"
-              echo "CC_PR_ID: $(CcPrId)"
-              echo "CC_PR_LINK: $(CcPrLink)"
+              echo "ADO_PR_ID: $env:ADO_PR_ID"
+              echo "ADO_PR_LINK: $env:ADO_PR_ID"
+              echo "CC_PR_ID: $env:CC_PR_ID"
+              echo "CC_PR_LINK: $env:CC_PR_LINK"
             displayName: Send MS Teams notification
             env:
-              TEAMS_WEBHOOK: $(MSTeamsUri)
+              TEAMS_WEBHOOK: $(MsTeamsWebhook)
+              ADO_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrId'] ]
+              ADO_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrLink'] ]
+              CC_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrId'] ]
+              CC_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrLink'] ]
