@@ -302,9 +302,9 @@ extends:
               echo "Agent version: $(AgentVersion)"
 
               echo "##vso[task.setVariable variable=ADO_PR_ID;isOutput=true]ADO_PR_ID_4848"
-              echo "##vso[task.setvariable variable=ADO_PR_LINK]ADO_PR_LINK_4848"
-              echo "##vso[task.setvariable variable=CC_PR_ID]CC_PR_ID_4848"
-              echo "##vso[task.setvariable variable=CC_PR_LINK]CC_PR_LINK_4848"
+              echo "##vso[task.setvariable variable=ADO_PR_LINK;isOutput=true]ADO_PR_LINK_4848"
+              echo "##vso[task.setvariable variable=CC_PR_ID;isOutput=true]CC_PR_ID_4848"
+              echo "##vso[task.setvariable variable=CC_PR_LINK;isOutput=true]CC_PR_LINK_4848"
 
             name: s_CreateAdoPrs
             displayName: Create PRs in AzureDevOps and ConfigChange
@@ -312,24 +312,6 @@ extends:
               USERNAME: $(User)
               PAT: $(AdoPAT)
               USEREMAIL: $(Email)
-
-        - job: SendNotifications
-          displayName: Send notifications
-          dependsOn: create_ado_prs
-          condition: and(succeeded(), eq(variables.IsRelease, 'True'))
-          variables:
-            IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
-            ADO_PR_ID: $[ dependencies.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_ID'] ]
-            ADO_PR_LINK: $[ dependencies.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_LINK'] ]
-            CC_PR_ID: $[ dependencies.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_ID'] ]
-            CC_PR_LINK: $[ dependencies.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_LINK'] ]
-          steps:
-          - pwsh: |
-              echo "ADO_PR_ID: $env:ADO_PR_ID"
-              echo "ADO_PR_LINK: $env:ADO_PR_LINK"
-              echo "CC_PR_ID: $env:CC_PR_ID"
-              echo "CC_PR_LINK: $env:CC_PR_LINK"
-            displayName: Send MS Teams notification
 
       - stage: S_Notifications
         displayName: Send Notifications
@@ -344,19 +326,17 @@ extends:
           displayName: Send Notifications about PRs
           variables:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
-            ADO_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_ID'] ]
-            ADO_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.ADO_PR_LINK'] ]
-            CC_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_ID'] ]
-            CC_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CC_PR_LINK'] ]
+            AdoPrId: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrId'] ]
+            AdoPrLink: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrLink'] ]
+            CcPrId: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrId'] ]
+            CcPrLink: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrLink'] ]
           condition: eq(variables.IsRelease, 'True')
           steps:
           - pwsh: |
-              echo "ADO_PR_ID: $(ADO_PR_ID)"
-              echo "ADO_PR_LINK: $(ADO_PR_LINK)"
-              echo "CC_PR_ID: $(CC_PR_ID)"
-              echo "CC_PR_LINK: $(CC_PR_LINK)"
+              echo "ADO_PR_ID: $(AdoPrId)"
+              echo "ADO_PR_LINK: $(AdoPrLink)"
+              echo "CC_PR_ID: $(CcPrId)"
+              echo "CC_PR_LINK: $(CcPrLink)"
             displayName: Send MS Teams notification
-            # We only want to send a notification if this is a scheduled release
-            # condition: eq(variables['build.reason'], 'Schedule')
             env:
               TEAMS_WEBHOOK: $(MSTeamsUri)
