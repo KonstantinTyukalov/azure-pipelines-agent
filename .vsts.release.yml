@@ -301,10 +301,10 @@ extends:
               # node createAdoPrs.js $(AgentVersion)
               echo "Agent version: $(AgentVersion)"
 
-              echo "##vso[task.setVariable variable=ADO_PR_ID;isOutput=true]ADO_PR_ID_4848"
-              echo "##vso[task.setvariable variable=ADO_PR_LINK;isOutput=true]ADO_PR_LINK_4848"
-              echo "##vso[task.setvariable variable=CC_PR_ID;isOutput=true]CC_PR_ID_4848"
-              echo "##vso[task.setvariable variable=CC_PR_LINK;isOutput=true]CC_PR_LINK_4848"
+              echo "##vso[task.setVariable variable=AdoPrId;isOutput=true]ADO_PR_ID_4848"
+              echo "##vso[task.setvariable variable=AdoPrLink;isOutput=true]ADO_PR_LINK_4848"
+              echo "##vso[task.setvariable variable=CcPrId;isOutput=true]CC_PR_ID_4848"
+              echo "##vso[task.setvariable variable=CcPrLink;isOutput=true]CC_PR_LINK_4848"
 
             name: s_CreateAdoPrs
             displayName: Create PRs in AzureDevOps and ConfigChange
