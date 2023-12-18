@@ -336,11 +336,10 @@ extends:
               not(${{ parameters.onlyGitHubRelease }})
             )
           steps:
-          - pwsh: |
-              echo "ADO_PR_ID: $env:ADO_PR_ID"
-              echo "ADO_PR_LINK: $env:ADO_PR_ID"
-              echo "CC_PR_ID: $env:CC_PR_ID"
-              echo "CC_PR_LINK: $env:CC_PR_LINK"
+          - task: PowerShell@2
+            inputs:
+              targetType: 'filePath'
+              filePath: ./release/Send-PRsNotification.ps1
             displayName: Send MS Teams notification
             env:
               TEAMS_WEBHOOK: $(MsTeamsWebhook)
