@@ -323,9 +323,13 @@ extends:
           vmImage: ubuntu-latest
         jobs:
         - job: j_SendPRsNotifications
-          displayName: Send Notifications about PRs
+          displayName: Send Release PRs notifications
           variables:
             IsRelease: $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.isRelease'] ]
+            AdoPrId: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrId'] ]
+            AdoPrLink: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrLink'] ]
+            CcPrId: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrId'] ]
+            CcPrLink: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrLink'] ]
           condition: |
             and(
               eq(variables.IsRelease, 'True'),
@@ -340,7 +344,7 @@ extends:
             displayName: Send MS Teams notification
             env:
               TEAMS_WEBHOOK: $(MsTeamsWebhook)
-              ADO_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrId'] ]
-              ADO_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.AdoPrLink'] ]
-              CC_PR_ID: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrId'] ]
-              CC_PR_LINK: $[ stageDependencies.CreatePRs.create_ado_prs.outputs['s_CreateAdoPrs.CcPrLink'] ]
+              ADO_PR_ID: $(AdoPrId)
+              ADO_PR_LINK: $(AdoPrLink)
+              CC_PR_ID: $(CcPrId)
+              CC_PR_LINK: $(CcPrLink)
