@@ -333,8 +333,7 @@ extends:
           condition: |
             and(
               eq(variables.IsRelease, 'True'),
-              not(${{ parameters.onlyGitHubRelease }}),
-              eq(variables['System.JobAttempt'], '1')
+              not(${{ parameters.onlyGitHubRelease }})
             )
           steps:
           - task: PowerShell@2

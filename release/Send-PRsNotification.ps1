@@ -4,7 +4,10 @@
 
 $wikiLink = "[Wiki](https://dev.azure.com/mseng/AzureDevOps/_wiki/wikis/AzureDevOps.wiki/18816/How-to-release-the-agent)"
 
-if ($env:ADO_PR_ID -and $env:CC_PR_ID) {
+$arePRsCreated = $env:ADO_PR_ID -and $env:CC_PR_ID
+Write-Debug "arePRsCreated: $arePRsCreated"
+
+if ($arePRsCreated) {
     $adoPrLink = "[ADO PR $env:ADO_PR_ID]($env:ADO_PR_LINK)"
     $ccPrLink = "[CC PR $env:CC_PR_ID]($env:CC_PR_LINK)"
     $title = "Agent ADO release PRs created"
@@ -19,15 +22,20 @@ else {
     $themeColor = "#FF0000"
 }
 
-$body = [PSCustomObject]@{
-    title      = $title
-    text       = $text
-    themeColor = $themeColor
-} | ConvertTo-Json
+$shouldNotify = $arePRsCreated -or (!$arePRsCreated -and $env:SYSTEM_JOBATTEMPT -eq "1")
+if ($shouldNotify) {
+    $body = [PSCustomObject]@{
+        title      = $title
+        text       = $text
+        themeColor = $themeColor
+    } | ConvertTo-Json
 
-# Invoke-RestMethod -Uri $env:TEAMS_WEBHOOK -Method Post -Body $body -ContentType "application/json"
-
-echo $body
+    # Invoke-RestMethod -Uri $env:TEAMS_WEBHOOK -Method Post -Body $body -ContentType "application/json"
+    echo $body
+}
+else{
+    Write-Host "Skipping notification."
+}
 
 echo $env:TEAMS_WEBHOOK
 echo $env:ADO_PR_ID
@@ -37,4 +45,5 @@ echo $env:CC_PR_LINK
 echo $env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI
 echo $env:SYSTEM_TEAMPROJECT
 echo $env:BUILD_BUILDID
+echo $env:SYSTEM_JOBATTEMPT
 
