@@ -347,3 +347,12 @@ extends:
               ADO_PR_LINK: $(AdoPrLink)
               CC_PR_ID: $(CcPrId)
               CC_PR_LINK: $(CcPrLink)
+          - script: |
+              echo "Stage attempt: $(System.StageAttempt)"
+              echo "Stage name: $(System.StageName)"
+              echo "Job attempt: $(System.JobAttempt)"
+              echo "Job name: $(System.JobName)"
+              echo "Job status: $(System.JobStatus)"
+              echo "Phase attempt: $(System.PhaseAttempt)"
+              echo "Phase name: $(System.PhaseName)"
+
