@@ -72,11 +72,11 @@ extends:
 
             $isRelease = ($buildReason -eq 'Manual' -and !$isBuildStageOnly) -or ($buildReason -eq 'Schedule' -and $isReleaseWeek)
             Write-Host "isRelease = $isRelease"
-            $isRelease = $true
+            $isRelease = $false
             Write-Host "##vso[task.setVariable variable=isRelease;isOutput=true]$isRelease"
 
             $isScheduledRelease = $isRelease -and $buildReason -eq 'Schedule'
-            $isScheduledRelease = $true
+            # $isScheduledRelease = $false
             Write-Host "isScheduledRelease = $isScheduledRelease"
 
             if ($isRelease) {
