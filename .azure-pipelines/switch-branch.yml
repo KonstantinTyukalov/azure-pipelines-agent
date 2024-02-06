@@ -2,9 +2,6 @@ parameters:
 - name: branch
   type: string
 
-variables:
-  checkoutBranch: ${{ parameters.branch }}
-
 steps:
 # - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
   - script: |
