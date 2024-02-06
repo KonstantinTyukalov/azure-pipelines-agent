@@ -38,6 +38,9 @@ parameters:
 extends:
   template: .azure-pipelines/pipeline.yml
   parameters:
+    # https://learn.microsoft.com/en-us/azure/devops/pipelines/process/expressions?view=azure-devops#format
+    # https://learn.microsoft.com/en-us/azure/devops/pipelines/process/expressions?view=azure-devops#replace
+    # https://learn.microsoft.com/en-us/azure/devops/pipelines/process/expressions?view=azure-devops#coalesce
     branch:  $[ stageDependencies.Verify_release.Set_variables.outputs['SetReleaseVariables.releaseBranch'] ]
     componentDetection: false
     test: ${{ not(parameters.skipTests) }}
@@ -105,6 +108,9 @@ extends:
               $releaseBranch = "releases/$agentVersion"
               Write-Host "releaseBranch = $releaseBranch"
               Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]$releaseBranch"
+            }
+            else {
+              Write-Host "##vso[task.setVariable variable=releaseBranch;isOutput=true]"
             }
 
           name: SetReleaseVariables
