@@ -106,6 +106,7 @@ jobs:
       filePath: .azure-pipelines/scripts/Switch-Branch.ps1
     env:
       TARGET_BRANCH: $(CheckoutBranch)
+    condition: ne(variables.CheckoutBranch, '')
 
   # # 1ES images used on the ARM pool doesn't contain unzip tool, so we need to install it before starting the build
   # - ${{ if and(eq(parameters.arch, 'arm64'), ne(parameters.os, 'osx')) }}:
