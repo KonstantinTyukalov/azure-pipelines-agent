@@ -100,10 +100,9 @@ jobs:
     clean: true
 
   # Switch to branch if set
-  - ${{ if ne(parameters.branch, '') }}:
-    - template: switch-branch.yml
-      parameters:
-        branch: $(CheckoutBranch)
+  - template: switch-branch.yml
+    parameters:
+      branch: $(CheckoutBranch)
 
   # # 1ES images used on the ARM pool doesn't contain unzip tool, so we need to install it before starting the build
   # - ${{ if and(eq(parameters.arch, 'arm64'), ne(parameters.os, 'osx')) }}:

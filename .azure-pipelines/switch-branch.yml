@@ -11,3 +11,4 @@ steps:
       # git checkout -f origin/${{ parameters.branch }}
       echo "Checkout branch: ${{ parameters.branch }}"
     displayName: Checkout branch
+    condition: ne(parameters.branch, '')
