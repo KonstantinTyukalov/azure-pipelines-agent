@@ -2,6 +2,9 @@ parameters:
 - name: branch
   type: string
 
+variables:
+  checkoutBranch: ${{ parameters.branch }}
+
 steps:
 # - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
   - script: |
@@ -11,4 +14,4 @@ steps:
       # git checkout -f origin/${{ parameters.branch }}
       echo "Checkout branch: ${{ parameters.branch }}"
     displayName: Checkout branch
-    condition: ne(${{ parameters.branch }}, '')
+    condition: ne(variables.checkoutBranch, '')
