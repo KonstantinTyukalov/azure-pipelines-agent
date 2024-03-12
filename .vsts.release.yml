@@ -65,6 +65,7 @@ extends:
       - job: Set_variables
         displayName: Set release-specific variables
         steps:
+        - checkout: none
         - pwsh: |
             $isBuildStageOnly = [System.Convert]::ToBoolean('${{ parameters.buildStageOnly }}')
             $buildReason = '$(Build.Reason)'
